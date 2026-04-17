@@ -1,181 +1,114 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Form</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Form</title>
 
-  <!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&family=Inter&family=Patrick+Hand&display=swap" rel="stylesheet">
 
-  <link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&family=Inter:wght@300;400;500&family=Patrick+Hand&display=swap" rel="stylesheet">
-
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: #0c2d48;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 500px;
-      border: 2px solid white;
-      border-radius: 20px;
-      padding: 20px;
-      position: relative;
-    }
-
-    .corner {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      border: 2px solid white;
-      opacity: 0.5;
-    }
-    .top-left { top: 5px; left: 5px; border-right: none; border-bottom: none; }
-    .top-right { top: 5px; right: 5px; border-left: none; border-bottom: none; }
-    .bottom-left { bottom: 5px; left: 5px; border-right: none; border-top: none; }
-    .bottom-right { bottom: 5px; right: 5px; border-left: none; border-top: none; }
-
-    h1 {
-      font-family: 'Averia Libre', cursive;
-      text-align: center;
-      letter-spacing: 3px;
-    }
-
-    h2, label {
-      font-family: 'Patrick Hand', cursive;
-      display: block;
-      transform: rotate(-1deg);
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="number"] {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px solid white;
-      padding: 5px;
-      color: white;
-      margin-bottom: 15px;
-    }
-
-    input:focus {
-      outline: none;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      font-family: 'Averia Libre';
-      font-weight: bold;
-      background: white;
-      color: #0c2d48;
-      cursor: pointer;
-    }
-  </style>
-
+<style>
+body {margin:0;font-family:'Inter';background:#0c2d48;color:white;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+.container {width:90%;max-width:500px;border:2px solid white;border-radius:20px;padding:20px;}
+h1 {font-family:'Averia Libre';text-align:center;letter-spacing:3px;}
+h2,label {font-family:'Patrick Hand';display:block;transform:rotate(-1deg);} 
+input,textarea {width:100%;background:transparent;border:none;border-bottom:1px solid white;color:white;margin-bottom:15px;padding:5px;}
+button {width:100%;padding:10px;border:none;border-radius:10px;font-family:'Averia Libre';background:white;color:#0c2d48;cursor:pointer;}
+.hidden {display:none;}
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="container" id="formPage">
 
-  <div class="corner top-left"></div>
-  <div class="corner top-right"></div>
-  <div class="corner bottom-left"></div>
-  <div class="corner bottom-right"></div>
+<div style="display:flex;justify-content:space-between;font-size:12px;">
+<span id="date"></span>
+<span id="order"></span>
+</div>
 
-  <div class="row">
-    <span id="date"></span>
-    <span id="order"></span>
-  </div>
+<h1>ORDER FORM</h1>
 
-  <h1>ORDER FORM</h1>
+<h2>Customer Details</h2>
+<label>Name</label>
+<input id="name">
 
-  <h2>Customer Details</h2>
-  <label>Name</label>
-  <input type="text" id="name">
+<label>Email</label>
+<input id="email">
 
-<label>Email</label> <input type="email" id="email">
+<label>School</label>
+<input id="school">
 
-  <h2>Order Details</h2>
+<label>Grade</label>
+<input id="grade">
 
-  <label>
-    <input type="radio" name="type" value="50" checked> Plain (₱50)
-  </label>
+<label>Section</label>
+<input id="section">
 
-  <label>
-    <input type="radio" name="type" value="70"> With Design (₱70)
-  </label>
+<h2>Order Details</h2>
 
-<label>Quantity</label> <input type="number" id="qty" value="1" min="1">
+<label><input type="radio" name="type" value="20" checked> Plain (₱20)</label>
+<label><input type="radio" name="type" value="35"> Custom Design (₱35)</label>
+<label><input type="radio" name="type" value="50"> With Design (₱50)</label>
 
-  <h2 id="total">Total: ₱50</h2>
+<div id="customBox" class="hidden">
+<label>Custom Request</label>
+<textarea id="customText"></textarea>
+</div>
+
+<label>Quantity</label>
+<input type="number" id="qty" value="1" min="1">
+
+<h2 id="total">Total: ₱20</h2>
 
 <button onclick="submitOrder()">Submit Order</button>
 
 </div>
 
+<div class="container hidden" id="thankYouPage" style="text-align:center;">
+<h1>Thank You!</h1>
+<p>Your order has been received.</p>
+<p>Please monitor your email OR send your order number to:</p>
+<p><b>Instagram / Facebook: clickandclasp_</b></p>
+<p id="finalOrder"></p>
+</div>
+
 <script>
-  document.getElementById("date").textContent =
-    "Date: " + new Date().toLocaleDateString();
+document.getElementById("date").textContent = "Date: " + new Date().toLocaleDateString();
+const orderNum = Math.floor(10000 + Math.random()*90000);
+document.getElementById("order").textContent = "Order #: " + orderNum;
 
-  const orderNum = Math.floor(10000 + Math.random() * 90000);
-  document.getElementById("order").textContent = "Order #: " + orderNum;
+const radios = document.querySelectorAll('input[name="type"]');
+const qty = document.getElementById("qty");
+const totalText = document.getElementById("total");
+const customBox = document.getElementById("customBox");
 
-  const nameInput = document.getElementById("name");
-  const emailInput = document.getElementById("email");
-  const radios = document.querySelectorAll('input[name="type"]');
-  const qty = document.getElementById("qty");
-  const totalText = document.getElementById("total");
+function updateTotal(){
+const selected = document.querySelector('input[name="type"]:checked');
+const price = selected.value;
 
-  function updateTotal() {
-    const price = document.querySelector('input[name="type"]:checked').value;
-    totalText.textContent = "Total: ₱" + (price * qty.value);
-  }
+totalText.textContent = "Total: ₱" + (price * qty.value);
 
-  radios.forEach(r => r.addEventListener("change", updateTotal));
-  qty.addEventListener("input", updateTotal);
+if(price == 35){customBox.classList.remove("hidden");}
+else{customBox.classList.add("hidden");}
+}
 
-  function submitOrder() {
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const price = document.querySelector('input[name="type"]:checked').value;
-    const quantity = qty.value;
-    const total = price * quantity;
+radios.forEach(r=>r.addEventListener("change",updateTotal));
+qty.addEventListener("input",updateTotal);
 
-    if (!name || !email) {
-      alert("Please fill out your name and email.");
-      return;
-    }
+function submitOrder(){
+const name = document.getElementById("name").value;
+const email = document.getElementById("email").value;
 
-    alert(
-      "Order submitted! 🎉\n\nOrder #: " + orderNum +
-      "\nTotal: ₱" + total
-    );
+if(!name || !email){alert("Please fill required fields");return;}
 
-    nameInput.value = "";
-    emailInput.value = "";
-    qty.value = 1;
-    updateTotal();
-  }
+// switch page
+
+document.getElementById("formPage").classList.add("hidden");
+document.getElementById("thankYouPage").classList.remove("hidden");
+
+document.getElementById("finalOrder").textContent = "Order #: " + orderNum;
+}
 </script>
 
 </body>
