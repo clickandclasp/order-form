@@ -1,148 +1,333 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order Form</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&family=Inter&family=Patrick+Hand&display=swap" rel="stylesheet">
+<!-- FONT -->
+<link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+(function(){
+emailjs.init("YOUR_PUBLIC_KEY"); // <-- PUT YOUR PUBLIC KEY HERE
+})();
+</script>
 
 <style>
-body {margin:0;font-family:'Inter';background:#0c2d48;color:white;display:flex;justify-content:center;align-items:center;min-height:100vh;}
-.container {width:90%;max-width:520px;border:2px solid white;border-radius:20px;padding:20px;}
-h1 {font-family:'Averia Libre';text-align:center;letter-spacing:3px;}
-h2,label {font-family:'Patrick Hand';display:block;transform:rotate(-1deg);} 
-input,textarea {width:100%;background:transparent;border:none;border-bottom:1px solid white;color:white;margin-bottom:15px;padding:5px;}
-button {width:100%;padding:10px;border:none;border-radius:10px;font-family:'Averia Libre';background:white;color:#0c2d48;cursor:pointer;}
-.hidden {display:none;}
+body{
+margin:0;
+font-family:'Averia Libre', cursive;
+background:#0f3550;
+color:white;
+}
 
-.gallery {display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px;}
-.gallery img {width:100%;border-radius:10px;border:2px solid transparent;cursor:pointer;background:white;padding:5px;}
-.selected {border:2px solid yellow;}
+.container{
+max-width:420px;
+margin:auto;
+padding:20px;
+}
+
+h1{
+text-align:center;
+letter-spacing:3px;
+}
+
+input, select{
+width:100%;
+background:transparent;
+border:none;
+border-bottom:2px solid white;
+color:white;
+padding:8px;
+margin-bottom:15px;
+font-size:14px;
+}
+
+select{
+appearance:none;
+background:#0f3550;
+border:2px solid white;
+border-radius:8px;
+padding:10px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+background:white;
+color:#0f3550;
+font-weight:bold;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+.item{
+border:1px solid white;
+padding:10px;
+margin-top:20px;
+border-radius:12px;
+}
+
+.photos{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+}
+
+.slot{
+border:2px dashed white;
+height:100px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:12px;
+cursor:pointer;
+position:relative;
+}
+
+.slot img{
+width:100%;
+height:100%;
+object-fit:cover;
+border-radius:8px;
+}
+
+.remove{
+position:absolute;
+top:3px;
+right:5px;
+cursor:pointer;
+}
+
+.highlight{
+border-color:yellow;
+}
+
+.designs{
+display:none;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.design{
+width:60px;
+height:120px;
+cursor:pointer;
+opacity:0.6;
+transition:0.3s;
+}
+
+.design.active{
+opacity:1;
+transform:scale(1.1);
+}
+
+.counter{
+font-size:12px;
+margin-bottom:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container" id="formPage">
-
-<div style="display:flex;justify-content:space-between;font-size:12px;">
-<span id="date"></span>
-<span id="order"></span>
-</div>
+<div class="container">
 
 <h1>ORDER FORM</h1>
 
-<h2>Customer Details</h2>
-<label>Name</label>
-<input id="name">
+<h3>Customer Details</h3>
 
-<label>Email</label>
-<input id="email">
+<input id="name" placeholder="Name">
+<input id="email" placeholder="Email">
+<input id="school" placeholder="School">
+<input id="grade" placeholder="Grade">
+<input id="section" placeholder="Section">
 
-<label>School</label>
-<input id="school">
+<div id="items"></div>
 
-<label>Grade</label>
-<input id="grade">
+<button onclick="addItem()">+ Add Keychain</button>
 
-<label>Section</label>
-<input id="section">
-
-<h2>Order Details</h2>
-
-<label><input type="radio" name="type" value="20" checked> Plain (₱20)</label>
-<label><input type="radio" name="type" value="50"> With Design (₱50)</label>
-<label><input type="radio" name="type" value="35"> Custom Design (₱35)</label>
-
-<!-- YOUR REAL KEYCHAIN IMAGES -->
-<div id="designGallery" class="gallery hidden">
-<img src="design1.png" onclick="selectDesign(this,'Pink Spider')">
-<img src="design2.png" onclick="selectDesign(this,'Red Spider')">
-<img src="design3.png" onclick="selectDesign(this,'Film Strip')">
-<img src="design4.png" onclick="selectDesign(this,'Ocean')">
-<img src="design5.png" onclick="selectDesign(this,'Pink Floral')">
-<img src="design6.png" onclick="selectDesign(this,'Red Stripes')">
-<img src="design7.png" onclick="selectDesign(this,'Yellow Checkered')">
-</div>
-
-<div id="customBox" class="hidden">
-<label>Custom Request</label>
-<textarea id="customText"></textarea>
-</div>
-
-<label>Quantity</label>
-<input type="number" id="qty" value="1" min="1">
-
-<h2 id="total">Total: ₱20</h2>
+<h3 id="total">Total: ₱0</h3>
 
 <button onclick="submitOrder()">Submit Order</button>
 
 </div>
 
-<div class="container hidden" id="thankYouPage" style="text-align:center;">
-<h1>Thank You!</h1>
-<p>Thank you for your order, please monitor your email or send your order number to our instagram/facebook page; <b>clickandclasp_</b></p>
-<p id="finalOrder"></p>
+<script>
+let items=[];
+let orderNum=Math.floor(10000+Math.random()*90000);
+
+function addItem(){
+
+let item={
+type:25,
+design:null,
+custom:"",
+photos:[null,null,null,null]
+};
+
+items.push(item);
+render();
+}
+
+function render(){
+
+let html="";
+let total=0;
+
+items.forEach((item,i)=>{
+
+total+=item.type;
+
+html+=`
+<div class="item">
+<h4>Item ${i+1}</h4>
+
+<select onchange="changeType(${i},this.value)">
+<option value="25" ${item.type==25?"selected":""}>Plain (₱25)</option>
+<option value="30" ${item.type==30?"selected":""}>With Design (₱30)</option>
+<option value="35" ${item.type==35?"selected":""}>Custom (₱35)</option>
+</select>
+
+${item.type==30?`
+<div class="designs" style="display:flex;">
+${[1,2,3,4,5,6,7].map(d=>`
+<img src="design${d}.png"
+class="design ${item.design==d?"active":""}"
+onclick="selectDesign(${i},${d})">
+`).join("")}
+</div>
+`:``}
+
+${item.type==35?`
+<input placeholder="Custom request"
+oninput="items[${i}].custom=this.value">
+`:``}
+
+<div class="counter">${item.photos.filter(p=>p).length}/4 photos uploaded</div>
+
+<div class="photos">
+${item.photos.map((p,pi)=>`
+<div class="slot ${!p?'highlight':''}" onclick="upload(${i},${pi})">
+${p?`<img src="${p}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add"}
+</div>
+`).join("")}
 </div>
 
-<script>
-document.getElementById("date").textContent = "Date: " + new Date().toLocaleDateString();
-const orderNum = Math.floor(10000 + Math.random()*90000);
-document.getElementById("order").textContent = "Order #: " + orderNum;
+</div>
+`;
 
-const radios = document.querySelectorAll('input[name="type"]');
-const qty = document.getElementById("qty");
-const totalText = document.getElementById("total");
-const customBox = document.getElementById("customBox");
-const gallery = document.getElementById("designGallery");
-let selectedDesign = "";
+});
 
-function updateTotal(){
-const selected = document.querySelector('input[name="type"]:checked');
-const price = selected.value;
-
-totalText.textContent = "Total: ₱" + (price * qty.value);
-
-if(price == 50){
-  gallery.classList.remove("hidden");
-  customBox.classList.add("hidden");
-}
-else if(price == 35){
-  customBox.classList.remove("hidden");
-  gallery.classList.add("hidden");
-}
-else{
-  customBox.classList.add("hidden");
-  gallery.classList.add("hidden");
-}
+document.getElementById("items").innerHTML=html;
+document.getElementById("total").innerText="Total: ₱"+total;
 }
 
-function selectDesign(img,name){
-const all = document.querySelectorAll('.gallery img');
-all.forEach(i=>i.classList.remove('selected'));
-img.classList.add('selected');
-selectedDesign = name;
+function changeType(i,val){
+items[i].type=parseInt(val);
+items[i].design=null;
+items[i].custom="";
+render();
 }
 
-radios.forEach(r=>r.addEventListener("change",updateTotal));
-qty.addEventListener("input",updateTotal);
+function selectDesign(i,d){
+items[i].design=d;
+render();
+}
+
+function upload(i,pi){
+
+let input=document.createElement("input");
+input.type="file";
+input.accept="image/*";
+
+input.onchange=e=>{
+let file=e.target.files[0];
+let reader=new FileReader();
+reader.onload=()=>{
+items[i].photos[pi]=reader.result;
+render();
+};
+reader.readAsDataURL(file);
+};
+
+input.click();
+}
+
+function removePhoto(e,i,pi){
+e.stopPropagation();
+items[i].photos[pi]=null;
+render();
+}
 
 function submitOrder(){
-const name = document.getElementById("name").value;
-const email = document.getElementById("email").value;
 
-if(!name || !email){alert("Please fill required fields");return;}
+let name=document.getElementById("name").value;
+let email=document.getElementById("email").value;
+let school=document.getElementById("school").value;
+let grade=document.getElementById("grade").value;
+let section=document.getElementById("section").value;
 
-const selected = document.querySelector('input[name="type"]:checked').value;
-if(selected == 50 && !selectedDesign){alert("Please select a design");return;}
+if(!name||!email){
+alert("Fill required fields");
+return;
+}
 
-// switch page
+let itemsText="";
+let total=0;
 
-document.getElementById("formPage").classList.add("hidden");
-document.getElementById("thankYouPage").classList.remove("hidden");
+for(let i=0;i<items.length;i++){
 
-document.getElementById("finalOrder").textContent = "Order #: " + orderNum + " ("+selectedDesign+")";
+if(items[i].photos.includes(null)){
+alert("Each item needs 4 photos");
+return;
+}
+
+if(items[i].type==30 && !items[i].design){
+alert("Select a design");
+return;
+}
+
+if(items[i].type==35 && !items[i].custom){
+alert("Add custom request");
+return;
+}
+
+total+=items[i].type;
+
+itemsText+=`Item ${i+1} - ₱${items[i].type}\n`;
+}
+
+emailjs.send(
+"service_wuyfomj",
+"template_wlwgyco",
+{
+order_number:orderNum,
+date:new Date().toLocaleDateString(),
+name:name,
+email:email,
+school:school,
+grade:grade,
+section:section,
+items:itemsText,
+total:total
+}
+)
+.then(()=>{
+alert("Order sent! Order #"+orderNum);
+})
+.catch(()=>{
+alert("Failed to send");
+});
+
 }
 </script>
 
