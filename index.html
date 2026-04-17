@@ -28,6 +28,13 @@ padding:20px;
 
 h1{text-align:center;}
 
+.topbar{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+margin-bottom:15px;
+}
+
 input, textarea{
 width:100%;
 background:transparent;
@@ -71,11 +78,18 @@ margin-top:20px;
 border-radius:15px;
 }
 
+/* DESIGN ROW FIX */
 .designRow{
 display:flex;
-gap:10px;
+gap:14px;
 overflow-x:auto;
-margin:10px 0;
+margin:15px 0;
+padding-bottom:10px;
+scrollbar-width:none;
+}
+
+.designRow::-webkit-scrollbar{
+display:none;
 }
 
 .design{
@@ -90,6 +104,7 @@ opacity:1;
 transform:scale(1.1);
 }
 
+/* CREATE BUTTON FIX */
 .createBtn{
 min-width:70px;
 height:120px;
@@ -99,15 +114,18 @@ align-items:center;
 justify-content:center;
 cursor:pointer;
 opacity:.6;
+font-size:11px;
+text-align:center;
+padding:5px;
 }
 
 .createBtn.active{
 opacity:1;
 border:2px solid yellow;
-transform:scale(1.1);
+transform:scale(1.05);
 }
 
-/* PHOTO STRIP = 1 COLUMN */
+/* PHOTO STRIP */
 .strip{
 display:flex;
 flex-direction:column;
@@ -154,7 +172,6 @@ grid-template-columns:1fr 1fr;
 gap:10px;
 margin-top:10px;
 }
-
 </style>
 </head>
 
@@ -163,6 +180,11 @@ margin-top:10px;
 <div class="container">
 
 <h1>ORDER FORM</h1>
+
+<div class="topbar">
+<div>Date: <span id="date"></span></div>
+<div>Order #: <span id="orderNum"></span></div>
+</div>
 
 <h3>Customer Details</h3>
 
@@ -186,6 +208,9 @@ margin-top:10px;
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
 
+document.getElementById("date").innerText = new Date().toLocaleDateString();
+document.getElementById("orderNum").innerText = orderNum;
+
 function addItem(){
 items.push({
 type:25,
@@ -202,7 +227,6 @@ let html="";
 let total=0;
 
 items.forEach((item,i)=>{
-
 total+=item.type;
 
 html+=`
@@ -226,13 +250,15 @@ onclick="selectDesign(${i},${d})">
 `).join("")}
 
 <div class="createBtn ${item.design=="create"?"active":""}"
-onclick="selectDesign(${i},'create')">Create</div>
+onclick="selectDesign(${i},'create')">
+Create<br>Own Design
+</div>
 
 </div>
 
 ${item.design=="create"?`
 <div style="font-size:12px;margin-bottom:10px;">
-You will receive a Canva template after ordering.
+You will receive a Canva template after ordering. Please message your order# to our Social Media to request the template.
 </div>
 `:``}
 
@@ -252,7 +278,6 @@ ${item.inspo.map((p,pi)=>`
 </div>
 `).join("")}
 </div>
-
 `:``}
 
 <div class="label">Photo Strip (4 Photos Required)</div>
@@ -373,12 +398,10 @@ if(item.photos.includes(null)){
 alert("Each item needs 4 photos");
 return;
 }
-
 if(item.type==30 && !item.design){
 alert("Select a design");
 return;
 }
-
 if(item.type==35 && !item.custom){
 alert("Describe your custom design");
 return;
