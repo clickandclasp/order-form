@@ -9,12 +9,16 @@
 
 <style>
 body {margin:0;font-family:'Inter';background:#0c2d48;color:white;display:flex;justify-content:center;align-items:center;min-height:100vh;}
-.container {width:90%;max-width:500px;border:2px solid white;border-radius:20px;padding:20px;}
+.container {width:90%;max-width:520px;border:2px solid white;border-radius:20px;padding:20px;}
 h1 {font-family:'Averia Libre';text-align:center;letter-spacing:3px;}
 h2,label {font-family:'Patrick Hand';display:block;transform:rotate(-1deg);} 
 input,textarea {width:100%;background:transparent;border:none;border-bottom:1px solid white;color:white;margin-bottom:15px;padding:5px;}
 button {width:100%;padding:10px;border:none;border-radius:10px;font-family:'Averia Libre';background:white;color:#0c2d48;cursor:pointer;}
 .hidden {display:none;}
+
+.gallery {display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px;}
+.gallery img {width:100%;border-radius:10px;border:2px solid transparent;cursor:pointer;background:white;padding:5px;}
+.selected {border:2px solid yellow;}
 </style>
 </head>
 
@@ -47,9 +51,20 @@ button {width:100%;padding:10px;border:none;border-radius:10px;font-family:'Aver
 
 <h2>Order Details</h2>
 
-<label><input type="radio" name="type" value="20" checked> Plain (₱25)</label>
+<label><input type="radio" name="type" value="20" checked> Plain (₱20)</label>
+<label><input type="radio" name="type" value="50"> With Design (₱50)</label>
 <label><input type="radio" name="type" value="35"> Custom Design (₱35)</label>
-<label><input type="radio" name="type" value="50"> With Design (₱30)</label>
+
+<!-- YOUR REAL KEYCHAIN IMAGES -->
+<div id="designGallery" class="gallery hidden">
+<img src="design1.png" onclick="selectDesign(this,'Pink Spider')">
+<img src="design2.png" onclick="selectDesign(this,'Red Spider')">
+<img src="design3.png" onclick="selectDesign(this,'Film Strip')">
+<img src="design4.png" onclick="selectDesign(this,'Ocean')">
+<img src="design5.png" onclick="selectDesign(this,'Pink Floral')">
+<img src="design6.png" onclick="selectDesign(this,'Red Stripes')">
+<img src="design7.png" onclick="selectDesign(this,'Yellow Checkered')">
+</div>
 
 <div id="customBox" class="hidden">
 <label>Custom Request</label>
@@ -67,9 +82,7 @@ button {width:100%;padding:10px;border:none;border-radius:10px;font-family:'Aver
 
 <div class="container hidden" id="thankYouPage" style="text-align:center;">
 <h1>Thank You!</h1>
-<p>Your order has been received.</p>
-<p>Please monitor your email OR send your order number to:</p>
-<p><b>Instagram / Facebook: clickandclasp_</b></p>
+<p>Thank you for your order, please monitor your email or send your order number to our instagram/facebook page; <b>clickandclasp_</b></p>
 <p id="finalOrder"></p>
 </div>
 
@@ -82,6 +95,8 @@ const radios = document.querySelectorAll('input[name="type"]');
 const qty = document.getElementById("qty");
 const totalText = document.getElementById("total");
 const customBox = document.getElementById("customBox");
+const gallery = document.getElementById("designGallery");
+let selectedDesign = "";
 
 function updateTotal(){
 const selected = document.querySelector('input[name="type"]:checked');
@@ -89,8 +104,25 @@ const price = selected.value;
 
 totalText.textContent = "Total: ₱" + (price * qty.value);
 
-if(price == 35){customBox.classList.remove("hidden");}
-else{customBox.classList.add("hidden");}
+if(price == 50){
+  gallery.classList.remove("hidden");
+  customBox.classList.add("hidden");
+}
+else if(price == 35){
+  customBox.classList.remove("hidden");
+  gallery.classList.add("hidden");
+}
+else{
+  customBox.classList.add("hidden");
+  gallery.classList.add("hidden");
+}
+}
+
+function selectDesign(img,name){
+const all = document.querySelectorAll('.gallery img');
+all.forEach(i=>i.classList.remove('selected'));
+img.classList.add('selected');
+selectedDesign = name;
 }
 
 radios.forEach(r=>r.addEventListener("change",updateTotal));
@@ -102,12 +134,15 @@ const email = document.getElementById("email").value;
 
 if(!name || !email){alert("Please fill required fields");return;}
 
+const selected = document.querySelector('input[name="type"]:checked').value;
+if(selected == 50 && !selectedDesign){alert("Please select a design");return;}
+
 // switch page
 
 document.getElementById("formPage").classList.add("hidden");
 document.getElementById("thankYouPage").classList.remove("hidden");
 
-document.getElementById("finalOrder").textContent = "Order #: " + orderNum;
+document.getElementById("finalOrder").textContent = "Order #: " + orderNum + " ("+selectedDesign+")";
 }
 </script>
 
