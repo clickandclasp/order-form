@@ -26,9 +26,7 @@ margin:auto;
 padding:20px;
 }
 
-h1{text-align:center;}
-
-input, select{
+input, select, textarea{
 width:100%;
 background:transparent;
 border:none;
@@ -54,6 +52,7 @@ color:#0f3550;
 font-weight:bold;
 cursor:pointer;
 transition:0.25s;
+margin-top:15px;
 }
 
 button:hover{
@@ -72,6 +71,11 @@ display:flex;
 overflow-x:auto;
 gap:12px;
 padding:10px 0;
+scrollbar-width:none;
+}
+
+.designs::-webkit-scrollbar{
+display:none;
 }
 
 .design{
@@ -97,7 +101,7 @@ border:2px dashed white;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:12px;
+text-align:center;
 cursor:pointer;
 }
 
@@ -129,10 +133,6 @@ top:3px;
 right:6px;
 cursor:pointer;
 }
-
-.counter{
-font-size:12px;
-}
 </style>
 </head>
 
@@ -140,9 +140,7 @@ font-size:12px;
 
 <div class="container">
 
-<h1>ORDER FORM</h1>
-
-<h3>Customer Details</h3>
+<h2>ORDER FORM</h2>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -161,6 +159,7 @@ font-size:12px;
 </div>
 
 <script>
+
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
 
@@ -168,7 +167,9 @@ function addItem(){
 items.push({
 type:25,
 design:null,
-photos:[null,null,null,null]
+photos:[null,null,null,null],
+inspo:[],
+custom:""
 });
 render();
 }
@@ -187,8 +188,9 @@ html+=`
 <h4>Item ${i+1}</h4>
 
 <select onchange="changeType(${i},this.value)">
-<option value="25" ${item.type==25?"selected":""}>Plain (₱25)</option>
-<option value="30" ${item.type==30?"selected":""}>With Design (₱30)</option>
+<option value="25">Plain (₱25)</option>
+<option value="30">With Design (₱30)</option>
+<option value="35">Custom (₱35)</option>
 </select>
 
 ${item.type==30?`
@@ -200,15 +202,20 @@ class="design ${item.design==d?"active":""}"
 onclick="selectDesign(${i},${d})">
 `).join("")}
 
-<div class="custom-design ${item.design==='custom'?'active':''}"
-onclick="selectDesign(${i},'custom')">
-+<br>Custom
+<div class="custom-design ${item.design==='create'?'active':''}"
+onclick="selectDesign(${i},'create')">
+Create
 </div>
 
 </div>
 `:``}
 
-<div class="counter">${item.photos.filter(p=>p).length}/4 photos uploaded</div>
+${item.type==35?`
+<textarea placeholder="Describe your design..."
+oninput="items[${i}].custom=this.value"></textarea>
+
+<button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
+`:``}
 
 <div class="photos">
 ${item.photos.map((p,pi)=>`
@@ -241,7 +248,6 @@ items[i].design=d;
 render();
 }
 
-// SINGLE upload
 function upload(i,pi){
 let input=document.createElement("input");
 input.type="file";
@@ -260,24 +266,43 @@ reader.readAsDataURL(file);
 input.click();
 }
 
-// MULTIPLE upload (AUTO-FILL)
 function multiUpload(i){
 let input=document.createElement("input");
 input.type="file";
-input.accept="image/*";
 input.multiple=true;
+input.accept="image/*";
 
 input.onchange=e=>{
 let files=[...e.target.files];
 
-let emptyIndexes = items[i].photos
+let empty = items[i].photos
 .map((p,index)=>p?null:index)
 .filter(x=>x!==null);
 
-files.slice(0,emptyIndexes.length).forEach((file,idx)=>{
+files.slice(0,empty.length).forEach((file,idx)=>{
 let reader=new FileReader();
 reader.onload=()=>{
-items[i].photos[emptyIndexes[idx]]=reader.result;
+items[i].photos[empty[idx]]=reader.result;
+render();
+};
+reader.readAsDataURL(file);
+});
+};
+
+input.click();
+}
+
+function uploadInspo(i){
+let input=document.createElement("input");
+input.type="file";
+input.multiple=true;
+input.accept="image/*";
+
+input.onchange=e=>{
+[...e.target.files].forEach(file=>{
+let reader=new FileReader();
+reader.onload=()=>{
+items[i].inspo.push(reader.result);
 render();
 };
 reader.readAsDataURL(file);
@@ -295,18 +320,7 @@ render();
 
 function submitOrder(){
 
-let name=document.getElementById("name").value;
-let email=document.getElementById("email").value;
-let school=document.getElementById("school").value;
-let grade=document.getElementById("grade").value;
-let section=document.getElementById("section").value;
-
-if(!name||!email){
-alert("Fill required fields");
-return;
-}
-
-let itemsText="";
+let itemsHTML="";
 let total=0;
 
 for(let i=0;i<items.length;i++){
@@ -323,10 +337,21 @@ return;
 
 total+=items[i].type;
 
-if(items[i].design==='custom'){
-itemsText+=`Item ${i+1} - Custom Design (Send Canva template)\n`;
-}else{
-itemsText+=`Item ${i+1} - ₱${items[i].type}\n`;
+itemsHTML+=`<h3>Item ${i+1}</h3>`;
+
+items[i].photos.forEach(p=>{
+itemsHTML+=`<img src="${p}" width="100"><br>`;
+});
+
+if(items[i].inspo.length){
+itemsHTML+="<b>Inspo:</b><br>";
+items[i].inspo.forEach(p=>{
+itemsHTML+=`<img src="${p}" width="100"><br>`;
+});
+}
+
+if(items[i].custom){
+itemsHTML+=`Request: ${items[i].custom}<br>`;
 }
 }
 
@@ -336,29 +361,24 @@ emailjs.send(
 {
 order_number:orderNum,
 date:new Date().toLocaleDateString(),
-name:name,
-email:email,
-school:school,
-grade:grade,
-section:section,
-items:itemsText,
+name:document.getElementById("name").value,
+email:document.getElementById("email").value,
+school:document.getElementById("school").value,
+grade:document.getElementById("grade").value,
+section:document.getElementById("section").value,
+items:itemsHTML,
 total:total
 }
 )
 .then(()=>{
-let hasCustom = items.some(item => item.design==='custom');
-
-if(hasCustom){
-alert("Order sent! Order #" + orderNum + "\nWe will send your Canva template shortly.");
-}else{
 alert("Order sent! Order #" + orderNum);
-}
 })
 .catch(()=>{
 alert("Failed to send");
 });
 
 }
+
 </script>
 
 </body>
