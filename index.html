@@ -26,33 +26,38 @@ margin:auto;
 padding:20px;
 }
 
-input, select, textarea{
+h1{text-align:center;}
+
+input, textarea{
 width:100%;
 background:transparent;
 border:none;
 border-bottom:2px solid white;
 color:white;
-padding:8px;
 margin-bottom:15px;
+padding:8px;
 }
 
 select{
+width:100%;
+padding:12px;
+border-radius:12px;
 border:2px solid white;
-border-radius:8px;
-padding:10px;
+background:#0f3550;
+color:white;
 }
 
 button{
 width:100%;
-padding:12px;
+padding:14px;
+border-radius:20px;
 border:none;
-border-radius:12px;
 background:white;
 color:#0f3550;
 font-weight:bold;
+margin-top:10px;
 cursor:pointer;
-transition:0.25s;
-margin-top:15px;
+transition:.3s;
 }
 
 button:hover{
@@ -61,31 +66,23 @@ transform:scale(1.05);
 
 .item{
 border:1px solid white;
-padding:12px;
+padding:15px;
 margin-top:20px;
-border-radius:12px;
+border-radius:15px;
 }
 
-.designs{
+.designRow{
 display:flex;
+gap:10px;
 overflow-x:auto;
-gap:12px;
-padding:10px 0;
-scrollbar-width:none;
-}
-
-.designs::-webkit-scrollbar{
-display:none;
+margin:10px 0;
 }
 
 .design{
 width:70px;
-height:130px;
-object-fit:contain;
-flex-shrink:0;
 cursor:pointer;
-opacity:0.7;
-transition:0.25s;
+opacity:.6;
+transition:.3s;
 }
 
 .design.active{
@@ -93,27 +90,34 @@ opacity:1;
 transform:scale(1.1);
 }
 
-.custom-design{
-width:70px;
-height:130px;
-flex-shrink:0;
+.createBtn{
+min-width:70px;
+height:120px;
 border:2px dashed white;
 display:flex;
 align-items:center;
 justify-content:center;
-text-align:center;
 cursor:pointer;
+opacity:.6;
 }
 
-.photos{
-display:grid;
-grid-template-columns:repeat(2,1fr);
+.createBtn.active{
+opacity:1;
+border:2px solid yellow;
+transform:scale(1.1);
+}
+
+/* PHOTO STRIP = 1 COLUMN */
+.strip{
+display:flex;
+flex-direction:column;
 gap:10px;
+margin-top:10px;
 }
 
 .slot{
+height:90px;
 border:2px dashed white;
-height:100px;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -130,9 +134,27 @@ object-fit:cover;
 .remove{
 position:absolute;
 top:3px;
-right:6px;
+right:5px;
 cursor:pointer;
 }
+
+.highlight{
+border-color:yellow;
+}
+
+.label{
+margin-top:15px;
+font-size:13px;
+opacity:.8;
+}
+
+.inspoGrid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px;
+}
+
 </style>
 </head>
 
@@ -140,7 +162,9 @@ cursor:pointer;
 
 <div class="container">
 
-<h2>ORDER FORM</h2>
+<h1>ORDER FORM</h1>
+
+<h3>Customer Details</h3>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -159,7 +183,6 @@ cursor:pointer;
 </div>
 
 <script>
-
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
 
@@ -167,15 +190,14 @@ function addItem(){
 items.push({
 type:25,
 design:null,
+custom:"",
 photos:[null,null,null,null],
-inspo:[],
-custom:""
+inspo:[]
 });
 render();
 }
 
 function render(){
-
 let html="";
 let total=0;
 
@@ -185,16 +207,17 @@ total+=item.type;
 
 html+=`
 <div class="item">
+
 <h4>Item ${i+1}</h4>
 
 <select onchange="changeType(${i},this.value)">
-<option value="25">Plain (₱25)</option>
-<option value="30">With Design (₱30)</option>
-<option value="35">Custom (₱35)</option>
+<option value="25" ${item.type==25?"selected":""}>Plain (₱25)</option>
+<option value="30" ${item.type==30?"selected":""}>With Design (₱30)</option>
+<option value="35" ${item.type==35?"selected":""}>Custom Request (₱35)</option>
 </select>
 
 ${item.type==30?`
-<div class="designs">
+<div class="designRow">
 
 ${[1,2,3,4,5,6,7].map(d=>`
 <img src="design${d}.png"
@@ -202,12 +225,17 @@ class="design ${item.design==d?"active":""}"
 onclick="selectDesign(${i},${d})">
 `).join("")}
 
-<div class="custom-design ${item.design==='create'?'active':''}"
-onclick="selectDesign(${i},'create')">
-Create
-</div>
+<div class="createBtn ${item.design=="create"?"active":""}"
+onclick="selectDesign(${i},'create')">Create</div>
 
 </div>
+
+${item.design=="create"?`
+<div style="font-size:12px;margin-bottom:10px;">
+You will receive a Canva template after ordering.
+</div>
+`:``}
+
 `:``}
 
 ${item.type==35?`
@@ -215,19 +243,31 @@ ${item.type==35?`
 oninput="items[${i}].custom=this.value"></textarea>
 
 <button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
-`:``}
 
-<div class="photos">
-${item.photos.map((p,pi)=>`
-<div class="slot" onclick="upload(${i},${pi})">
-${p?`<img src="${p}">
-<div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`
-:"+ Add"}
+<div class="inspoGrid">
+${item.inspo.map((p,pi)=>`
+<div class="slot">
+<img src="${p}">
+<div class="remove" onclick="removeInspo(${i},${pi})">✖</div>
 </div>
 `).join("")}
 </div>
 
-<button onclick="multiUpload(${i})">Upload Multiple Photos</button>
+`:``}
+
+<div class="label">Photo Strip (4 Photos Required)</div>
+
+<div class="strip">
+${item.photos.map((p,pi)=>`
+<div class="slot ${!p?'highlight':''}" onclick="upload(${i},${pi})">
+${p?`<img src="${p}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add Photo"}
+</div>
+`).join("")}
+</div>
+
+<button onclick="multiUpload(${i})" style="margin-top:15px;">
+Upload Multiple Photos
+</button>
 
 </div>
 `;
@@ -240,6 +280,8 @@ document.getElementById("total").innerText="Total: ₱"+total;
 function changeType(i,val){
 items[i].type=parseInt(val);
 items[i].design=null;
+items[i].custom="";
+items[i].inspo=[];
 render();
 }
 
@@ -251,18 +293,15 @@ render();
 function upload(i,pi){
 let input=document.createElement("input");
 input.type="file";
-input.accept="image/*";
 
 input.onchange=e=>{
-let file=e.target.files[0];
 let reader=new FileReader();
 reader.onload=()=>{
 items[i].photos[pi]=reader.result;
 render();
 };
-reader.readAsDataURL(file);
+reader.readAsDataURL(e.target.files[0]);
 };
-
 input.click();
 }
 
@@ -270,25 +309,23 @@ function multiUpload(i){
 let input=document.createElement("input");
 input.type="file";
 input.multiple=true;
-input.accept="image/*";
 
 input.onchange=e=>{
 let files=[...e.target.files];
+let index=0;
 
-let empty = items[i].photos
-.map((p,index)=>p?null:index)
-.filter(x=>x!==null);
-
-files.slice(0,empty.length).forEach((file,idx)=>{
+files.forEach(file=>{
 let reader=new FileReader();
 reader.onload=()=>{
-items[i].photos[empty[idx]]=reader.result;
+while(index<4 && items[i].photos[index]) index++;
+if(index<4){
+items[i].photos[index]=reader.result;
 render();
+}
 };
 reader.readAsDataURL(file);
 });
 };
-
 input.click();
 }
 
@@ -296,7 +333,6 @@ function uploadInspo(i){
 let input=document.createElement("input");
 input.type="file";
 input.multiple=true;
-input.accept="image/*";
 
 input.onchange=e=>{
 [...e.target.files].forEach(file=>{
@@ -308,7 +344,6 @@ render();
 reader.readAsDataURL(file);
 });
 };
-
 input.click();
 }
 
@@ -318,42 +353,48 @@ items[i].photos[pi]=null;
 render();
 }
 
+function removeInspo(i,pi){
+items[i].inspo.splice(pi,1);
+render();
+}
+
 function submitOrder(){
 
-let itemsHTML="";
-let total=0;
+let name=document.getElementById("name").value;
+let email=document.getElementById("email").value;
 
-for(let i=0;i<items.length;i++){
+if(!name||!email){
+alert("Fill required fields");
+return;
+}
 
-if(items[i].photos.includes(null)){
+for(let item of items){
+if(item.photos.includes(null)){
 alert("Each item needs 4 photos");
 return;
 }
 
-if(items[i].type==30 && !items[i].design){
+if(item.type==30 && !item.design){
 alert("Select a design");
 return;
 }
 
-total+=items[i].type;
+if(item.type==35 && !item.custom){
+alert("Describe your custom design");
+return;
+}
+}
 
-itemsHTML+=`<h3>Item ${i+1}</h3>`;
+let itemsText=items.map((it,i)=>
+`Item ${i+1} - ₱${it.type} (${it.design||"N/A"})`
+).join("\n");
 
-items[i].photos.forEach(p=>{
-itemsHTML+=`<img src="${p}" width="100"><br>`;
+let attachments=[];
+
+items.forEach(it=>{
+attachments.push(...it.photos.filter(p=>p));
+attachments.push(...it.inspo);
 });
-
-if(items[i].inspo.length){
-itemsHTML+="<b>Inspo:</b><br>";
-items[i].inspo.forEach(p=>{
-itemsHTML+=`<img src="${p}" width="100"><br>`;
-});
-}
-
-if(items[i].custom){
-itemsHTML+=`Request: ${items[i].custom}<br>`;
-}
-}
 
 emailjs.send(
 "service_wuyfomj",
@@ -366,19 +407,20 @@ email:document.getElementById("email").value,
 school:document.getElementById("school").value,
 grade:document.getElementById("grade").value,
 section:document.getElementById("section").value,
-items:itemsHTML,
-total:total
+items:itemsText,
+total:items.reduce((t,i)=>t+i.type,0),
+attachments:attachments
 }
 )
 .then(()=>{
-alert("Order sent! Order #" + orderNum);
+alert("Order sent! Order #"+orderNum);
 })
 .catch(()=>{
 alert("Failed to send");
 });
-
 }
 
+addItem();
 </script>
 
 </body>
