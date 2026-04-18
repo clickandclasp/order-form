@@ -22,13 +22,12 @@ body{
   text-align:center;
 }
 
-input, select, textarea {
+input, select, textarea{
   width:100%;
   padding:10px;
   margin:6px 0;
   border:none;
   border-radius:6px;
-  box-sizing:border-box;
 }
 
 .card{
@@ -43,8 +42,6 @@ input, select, textarea {
   gap:10px;
   overflow-x:auto;
 }
-.design-row::-webkit-scrollbar{ display:none; }
-
 .designs{
   display:flex;
   gap:10px;
@@ -57,9 +54,10 @@ input, select, textarea {
   border:2px solid transparent;
 }
 
-.selected{
-  border:2px solid #a3ff12 !important;
-  box-shadow:0 0 5px rgba(163,255,18,0.5);
+.designs img.selected,
+.create-box.selected{
+  border:2px solid #a3ff12;
+  box-shadow:0 0 6px rgba(163,255,18,0.6);
 }
 
 .create-box{
@@ -71,7 +69,6 @@ input, select, textarea {
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  font-size:13px;
 }
 
 .upload-box{
@@ -91,7 +88,6 @@ input, select, textarea {
 
 .preview img{
   width:60px;
-  border-radius:6px;
   cursor:pointer;
 }
 
@@ -102,7 +98,6 @@ button{
   border:none;
   border-radius:10px;
   background:white;
-  cursor:pointer;
 }
 
 button:disabled{
@@ -143,29 +138,29 @@ let UPLOAD_PRESET = "keychain_upload";
 
 let dragged;
 
-let designNames = {
-  "design1.png": "Film Strip",
-  "design2.png": "Gwen Stacey",
-  "design3.png": "Miles Morales",
-  "design4.png": "Blue Ocean",
-  "design5.png": "Red Stripes",
-  "design6.png": "Pink Pattern",
-  "design7.png": "Yellow Sun"
+const designNames = {
+  "design1.png":"Film Strip",
+  "design2.png":"Gwen Stacey",
+  "design3.png":"Miles Morales",
+  "design4.png":"Blue Ocean",
+  "design5.png":"Red Stripes",
+  "design6.png":"Pink Pattern",
+  "design7.png":"Yellow Sun"
 };
 
 let orderNum = Math.floor(Math.random()*90000)+10000;
-document.getElementById("order").innerText = "Order #: " + orderNum;
-document.getElementById("date").innerText =
-"Date: " + new Date().toLocaleDateString();
+document.getElementById("order").innerText="Order #: "+orderNum;
+document.getElementById("date").innerText="Date: "+new Date().toLocaleDateString();
 
-let itemCount = 0;
+let itemCount=0;
 
 function addItem(){
   itemCount++;
 
-  let div = document.createElement("div");
-  div.className = "card";
-  div.innerHTML = `
+  let div=document.createElement("div");
+  div.className="card";
+
+  div.innerHTML=`
     <h3>Item ${itemCount}</h3>
 
     <select onchange="toggleSections(this)">
@@ -187,25 +182,18 @@ function addItem(){
         </div>
       </div>
 
-      <div class="info-note createNote" style="display:none;">
-        Wait for Canva template after ordering 💌
+      <div class="createNote" style="display:none;">
+        Wait for Canva template 💌
       </div>
     </div>
 
     <div class="customSection" style="display:none;">
       <textarea placeholder="Custom Request..."></textarea>
-
-      <div class="upload-box" onclick="openFile(this)">
-        Upload Inspo Photos (optional)
-        <input type="file" multiple hidden onchange="handleFiles(this,false)">
-      </div>
-
-      <div class="preview"></div>
     </div>
 
     <div class="upload-box mainUpload" onclick="openFile(this)">
       Upload Photos (4 for photo strip)
-      <input type="file" multiple hidden onchange="handleFiles(this,true)">
+      <input type="file" multiple hidden onchange="handleFiles(this)">
     </div>
 
     <div class="preview"></div>
@@ -220,73 +208,73 @@ function openFile(box){
 }
 
 function toggleSections(sel){
-  let card = sel.closest(".card");
+  let card=sel.closest(".card");
 
-  card.querySelector(".designSection").style.display = "none";
-  card.querySelector(".customSection").style.display = "none";
+  card.querySelector(".designSection").style.display="none";
+  card.querySelector(".customSection").style.display="none";
 
-  if(sel.value==="design") card.querySelector(".designSection").style.display="block";
-  if(sel.value==="custom") card.querySelector(".customSection").style.display="block";
+  if(sel.value==="design"){
+    card.querySelector(".designSection").style.display="block";
+  }
+
+  if(sel.value==="custom"){
+    card.querySelector(".customSection").style.display="block";
+  }
 
   updateTotal();
   validateSubmit();
 }
 
 function selectDesign(img){
-  let card = img.closest(".card");
+  let card=img.closest(".card");
 
-  card.querySelectorAll(".designs img").forEach(i=>i.classList.remove("selected"));
+  card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
   card.querySelector(".create-box").classList.remove("selected");
 
   img.classList.add("selected");
-  card.querySelector(".createNote").style.display="none";
 }
 
 function selectCreateOwn(box){
-  let card = box.closest(".card");
+  let card=box.closest(".card");
 
-  card.querySelectorAll(".designs img").forEach(i=>i.classList.remove("selected"));
+  card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
   box.classList.add("selected");
-
-  card.querySelector(".createNote").style.display="block";
 }
 
-function handleFiles(input,isMain){
-  let previewBox = input.parentElement.nextElementSibling;
-  let files = [...input.files];
+function handleFiles(input){
+  let preview=input.parentElement.nextElementSibling;
+  let files=[...input.files].slice(0,4);
 
-  if(isMain) files = files.slice(0,4);
-
-  previewBox.innerHTML="";
+  preview.innerHTML="";
 
   files.forEach(file=>{
-    let wrapper = document.createElement("div");
+    let wrapper=document.createElement("div");
 
-    let img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
+    let img=document.createElement("img");
+    img.src=URL.createObjectURL(file);
     img.draggable=true;
 
-    img.ondragstart = ()=> dragged=wrapper;
-    img.ondragover = e=>e.preventDefault();
-    img.ondrop = e=>{
+    img.ondragstart=()=>dragged=wrapper;
+    img.ondragover=e=>e.preventDefault();
+    img.ondrop=e=>{
       e.preventDefault();
-      previewBox.insertBefore(dragged,wrapper);
+      preview.insertBefore(dragged,wrapper);
     };
 
-    img.onclick = ()=>{
-      let newInput = document.createElement("input");
+    img.onclick=()=>{
+      let newInput=document.createElement("input");
       newInput.type="file";
       newInput.onchange=e=>{
-        let newFile=e.target.files[0];
-        img.src=URL.createObjectURL(newFile);
-        wrapper.file=newFile;
+        let f=e.target.files[0];
+        img.src=URL.createObjectURL(f);
+        wrapper.file=f;
       };
       newInput.click();
     };
 
     wrapper.file=file;
     wrapper.appendChild(img);
-    previewBox.appendChild(wrapper);
+    preview.appendChild(wrapper);
   });
 
   validateSubmit();
@@ -303,32 +291,31 @@ function updateTotal(){
   });
 
   document.getElementById("total").innerText="Total: ₱"+total;
+  return total;
 }
 
 function validateSubmit(){
   let valid=true;
 
   document.querySelectorAll(".card").forEach(card=>{
-    let preview = card.querySelector(".mainUpload + .preview");
-    if(preview.children.length < 4){
-      valid=false;
-    }
+    let preview=card.querySelector(".preview");
+    if(preview.children.length<4) valid=false;
   });
 
   document.getElementById("submitBtn").disabled=!valid;
 }
 
 async function uploadToCloudinary(file){
-  let formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
+  let formData=new FormData();
+  formData.append("file",file);
+  formData.append("upload_preset",UPLOAD_PRESET);
 
-  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
+  let res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
     method:"POST",
     body:formData
   });
 
-  let data = await res.json();
+  let data=await res.json();
   return data.secure_url;
 }
 
@@ -346,9 +333,9 @@ async function submitOrder(){
 
       if(selected?.classList.contains("create-box")){
         design="Create Own";
-      } else if(selected){
-        let fileName = selected.src.split("/").pop();
-        design = designNames[fileName] || fileName;
+      }else if(selected){
+        let file=selected.src.split("/").pop();
+        design=designNames[file] || file;
       }
     }
 
@@ -356,28 +343,35 @@ async function submitOrder(){
       design=card.querySelector("textarea").value || "Custom Request";
     }
 
-    items.push(`Item ${items.length+1}: ${type.toUpperCase()} - ${design}`);
+    items.push({type,design});
 
-    let previews=card.querySelector(".mainUpload + .preview");
-
-    for(let p of previews.children){
+    for(let p of card.querySelector(".preview").children){
       let url=await uploadToCloudinary(p.file);
       photoLinks.push(url);
     }
   }
 
+  let total = updateTotal();
+
+  let itemText=items.map((i,idx)=>
+    `Item ${idx+1}: ${i.type.toUpperCase()} - ${i.design}`
+  ).join("\n");
+
+  let photoText=photoLinks.join("\n");
+
   emailjs.send("service_wuyfomj","template_wlwgyco",{
-    order_number: orderNum,
-    name: name.value,
-    email: email.value,
-    school: school.value,
-    grade: grade.value,
-    section: section.value,
-    items: items.join("\n"),
-    photos: photoLinks.join("\n")
+    order_number:orderNum,
+    name:name.value,
+    email:email.value,
+    school:school.value,
+    grade:grade.value,
+    section:section.value,
+    items:itemText,
+    photos:photoText,
+    total: "₱" + total
   })
   .then(()=>window.location.href="thankyou.html")
-  .catch(()=>alert("Failed to send"));
+  .catch(()=>alert("Failed"));
 }
 
 addItem();
