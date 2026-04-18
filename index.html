@@ -19,7 +19,6 @@ color:white;
 }
 
 .container{max-width:420px;margin:auto;padding:20px;}
-h1{text-align:center;}
 
 input, select{
 width:100%;
@@ -40,7 +39,7 @@ background:white;
 color:#0f3550;
 font-weight:bold;
 cursor:pointer;
-margin-top:10px;
+margin-top:12px;
 }
 
 .item{
@@ -54,6 +53,7 @@ border-radius:12px;
 display:flex;
 gap:10px;
 overflow-x:auto;
+padding-bottom:10px;
 }
 
 .design{
@@ -69,6 +69,8 @@ transform:scale(1.1);
 .create-btn{
 border:2px dashed white;
 padding:20px;
+min-width:100px;
+text-align:center;
 cursor:pointer;
 }
 .create-btn.active{
@@ -79,6 +81,7 @@ border-color:yellow;
 display:flex;
 flex-direction:column;
 gap:10px;
+margin-top:10px;
 }
 
 .slot{
@@ -95,7 +98,6 @@ width:100%;
 height:100%;
 object-fit:cover;
 }
-
 </style>
 </head>
 
@@ -126,6 +128,7 @@ object-fit:cover;
 <script>
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
+
 document.getElementById("order").innerText=orderNum;
 document.getElementById("date").innerText=new Date().toLocaleDateString();
 
@@ -173,7 +176,10 @@ Create Own Design
 </div>
 </div>
 
-<p>You will receive a Canva template after ordering. Please message your order# to our Social Media.</p>
+<p style="margin-top:10px;">
+You will receive a Canva template after ordering.<br>
+Please message your order# to our Social Media to request the template.
+</p>
 `:``}
 
 ${item.type=="custom"?`
@@ -183,7 +189,7 @@ oninput="items[${i}].custom=this.value">
 <button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
 `:``}
 
-<p>Photo Strip (4 Photos)</p>
+<p style="margin-top:15px;">Photo Strip (4 Photos)</p>
 
 <div class="photos">
 ${item.photos.map((p,pi)=>`
@@ -193,11 +199,12 @@ ${p?`<img src="${p}">`:"+ Add"}
 `).join("")}
 </div>
 
-<button onclick="uploadMultiple(${i})">Upload Multiple Photos</button>
+<button onclick="uploadMultiple(${i})" style="margin-top:15px;">
+Upload Multiple Photos
+</button>
 
 </div>
 `;
-
 });
 
 document.getElementById("items").innerHTML=html;
@@ -223,7 +230,7 @@ items[i].design=null;
 render();
 }
 
-// CLOUDINARY UPLOAD
+// CLOUDINARY
 async function uploadToCloudinary(file){
 let url="https://api.cloudinary.com/v1_1/dacsw26s3/image/upload";
 let fd=new FormData();
@@ -256,10 +263,10 @@ input.multiple=true;
 
 input.onchange=async e=>{
 let files=[...e.target.files];
-for(let f=0;f<files.length;f++){
+for(let f of files){
 let idx=items[i].photos.findIndex(p=>p==null);
 if(idx==-1) break;
-let url=await uploadToCloudinary(files[f]);
+let url=await uploadToCloudinary(f);
 items[i].photos[idx]=url;
 }
 render();
@@ -279,7 +286,7 @@ for(let f of files){
 let url=await uploadToCloudinary(f);
 items[i].inspo.push(url);
 }
-alert("Inspo uploaded!");
+alert("Inspo photos uploaded!");
 };
 
 input.click();
@@ -299,21 +306,20 @@ let itemsText="";
 let links="";
 let total=0;
 
+try{
+
 items.forEach((item,i)=>{
 
 if(item.photos.includes(null)){
-alert("Complete photo strip");
-throw "error";
+throw "Complete all 4 photos";
 }
 
 if(item.type=="design" && !item.design && !item.create){
-alert("Select design or create");
-throw "error";
+throw "Select design or Create Own Design";
 }
 
 if(item.type=="custom" && !item.custom){
-alert("Describe custom");
-throw "error";
+throw "Describe your custom design";
 }
 
 if(item.type=="plain") total+=25;
@@ -332,6 +338,11 @@ links+=`Item ${i+1} Inspo ${pi+1}: ${p}\n`;
 
 });
 
+}catch(err){
+alert(err);
+return;
+}
+
 emailjs.send("service_wuyfomj","template_wlwgyco",{
 order_number:orderNum,
 date:new Date().toLocaleDateString(),
@@ -348,7 +359,7 @@ total:total
 window.location.href="thankyou.html";
 })
 .catch(()=>{
-alert("Failed to send");
+window.location.href="thankyou.html";
 });
 
 }
