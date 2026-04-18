@@ -6,11 +6,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-
 <script>
-(function(){
 emailjs.init("tp0-EdHc-e3iYbotR");
-})();
 </script>
 
 <style>
@@ -21,12 +18,7 @@ background:#0f3550;
 color:white;
 }
 
-.container{
-max-width:420px;
-margin:auto;
-padding:20px;
-}
-
+.container{max-width:420px;margin:auto;padding:20px;}
 h1{text-align:center;}
 
 input, select{
@@ -35,78 +27,52 @@ background:transparent;
 border:none;
 border-bottom:2px solid white;
 color:white;
-padding:10px;
+padding:8px;
 margin-bottom:15px;
-}
-
-select{
-border:2px solid white;
-border-radius:10px;
-padding:12px;
-background:#0f3550;
 }
 
 button{
 width:100%;
-padding:14px;
+padding:12px;
 border:none;
-border-radius:12px;
+border-radius:10px;
 background:white;
 color:#0f3550;
 font-weight:bold;
 cursor:pointer;
-transition:0.3s;
-}
-
-button:hover{
-transform:scale(1.05);
-box-shadow:0 0 10px rgba(255,255,255,0.5);
+margin-top:10px;
 }
 
 .item{
 border:1px solid white;
 padding:15px;
 margin-top:20px;
-border-radius:15px;
+border-radius:12px;
 }
 
-.designs{
+.row{
 display:flex;
 gap:10px;
 overflow-x:auto;
-padding-bottom:10px;
 }
 
 .design{
-width:60px;
-height:120px;
-opacity:0.5;
-cursor:pointer;
-transition:0.3s;
-}
-
-.design.active{
-opacity:1;
-transform:scale(1.1);
-filter:drop-shadow(0 0 5px white);
-}
-
-.createBtn{
-width:80px;
-height:120px;
-display:flex;
-align-items:center;
-justify-content:center;
-border:2px dashed white;
-border-radius:10px;
+width:70px;
 cursor:pointer;
 opacity:0.6;
 }
-
-.createBtn.active{
+.design.active{
 opacity:1;
 transform:scale(1.1);
-box-shadow:0 0 8px white;
+}
+
+.create-btn{
+border:2px dashed white;
+padding:20px;
+cursor:pointer;
+}
+.create-btn.active{
+border-color:yellow;
 }
 
 .photos{
@@ -117,12 +83,11 @@ gap:10px;
 
 .slot{
 border:2px dashed white;
-height:80px;
+height:70px;
 display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
-position:relative;
 }
 
 .slot img{
@@ -131,22 +96,6 @@ height:100%;
 object-fit:cover;
 }
 
-.remove{
-position:absolute;
-top:2px;
-right:5px;
-cursor:pointer;
-}
-
-.counter{
-font-size:12px;
-margin-bottom:10px;
-}
-
-.multiBtn{
-margin-top:10px;
-background:#ffffff22;
-}
 </style>
 </head>
 
@@ -155,11 +104,8 @@ background:#ffffff22;
 <div class="container">
 
 <h1>ORDER FORM</h1>
-
 <p>Date: <span id="date"></span></p>
 <p>Order #: <span id="order"></span></p>
-
-<h3>Customer Details</h3>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -187,6 +133,7 @@ function addItem(){
 items.push({
 type:"plain",
 design:null,
+create:false,
 custom:"",
 photos:[null,null,null,null],
 inspo:[]
@@ -207,55 +154,46 @@ if(item.type=="custom") total+=35;
 html+=`
 <div class="item">
 
-<h4>Item ${i+1}</h4>
-
 <select onchange="changeType(${i},this.value)">
 <option value="plain" ${item.type=="plain"?"selected":""}>Plain (₱25)</option>
 <option value="design" ${item.type=="design"?"selected":""}>With Design (₱30)</option>
-<option value="custom" ${item.type=="custom"?"selected":""}>Custom Request (₱35)</option>
+<option value="custom" ${item.type=="custom"?"selected":""}>Custom (₱35)</option>
 </select>
 
 ${item.type=="design"?`
-<div class="designs">
+<div class="row">
 ${[1,2,3,4,5,6,7].map(d=>`
 <img src="design${d}.png"
 class="design ${item.design==d?"active":""}"
 onclick="selectDesign(${i},${d})">
 `).join("")}
 
-<div class="createBtn ${item.design=='create'?'active':''}"
-onclick="selectDesign(${i},'create')">
+<div class="create-btn ${item.create?"active":""}" onclick="selectCreate(${i})">
 Create Own Design
 </div>
 </div>
 
-${item.design=='create'?`
-<p style="font-size:12px;">
-You will receive a Canva template after ordering.  
-Please message your order# to our Social Media to request the template.
-</p>`:""}
+<p>You will receive a Canva template after ordering. Please message your order# to our Social Media.</p>
 `:``}
 
 ${item.type=="custom"?`
 <input placeholder="Describe your design..."
 oninput="items[${i}].custom=this.value">
 
-<button class="multiBtn" onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
+<button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
 `:``}
 
-<p class="counter">${item.photos.filter(p=>p).length}/4 photos uploaded</p>
-
-<p style="font-size:12px;">Photo Strip (4 Photos)</p>
+<p>Photo Strip (4 Photos)</p>
 
 <div class="photos">
 ${item.photos.map((p,pi)=>`
 <div class="slot" onclick="upload(${i},${pi})">
-${p?`<img src="${p}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add"}
+${p?`<img src="${p}">`:"+ Add"}
 </div>
 `).join("")}
 </div>
 
-<button class="multiBtn" onclick="uploadMultiple(${i})">Upload Multiple Photos</button>
+<button onclick="uploadMultiple(${i})">Upload Multiple Photos</button>
 
 </div>
 `;
@@ -269,28 +207,43 @@ document.getElementById("total").innerText="Total: ₱"+total;
 function changeType(i,val){
 items[i].type=val;
 items[i].design=null;
-items[i].custom="";
+items[i].create=false;
 render();
 }
 
 function selectDesign(i,d){
 items[i].design=d;
+items[i].create=false;
 render();
+}
+
+function selectCreate(i){
+items[i].create=true;
+items[i].design=null;
+render();
+}
+
+// CLOUDINARY UPLOAD
+async function uploadToCloudinary(file){
+let url="https://api.cloudinary.com/v1_1/dacsw26s3/image/upload";
+let fd=new FormData();
+fd.append("file",file);
+fd.append("upload_preset","keychain_upload");
+
+let res=await fetch(url,{method:"POST",body:fd});
+let data=await res.json();
+return data.secure_url;
 }
 
 function upload(i,pi){
 let input=document.createElement("input");
 input.type="file";
-input.accept="image/*";
 
-input.onchange=e=>{
+input.onchange=async e=>{
 let file=e.target.files[0];
-let reader=new FileReader();
-reader.onload=()=>{
-items[i].photos[pi]=reader.result;
+let url=await uploadToCloudinary(file);
+items[i].photos[pi]=url;
 render();
-};
-reader.readAsDataURL(file);
 };
 
 input.click();
@@ -301,21 +254,15 @@ let input=document.createElement("input");
 input.type="file";
 input.multiple=true;
 
-input.onchange=e=>{
-let files=e.target.files;
-let index=0;
-
-for(let j=0;j<4;j++){
-if(!items[i].photos[j] && files[index]){
-let reader=new FileReader();
-reader.onload=(ev)=>{
-items[i].photos[j]=ev.target.result;
+input.onchange=async e=>{
+let files=[...e.target.files];
+for(let f=0;f<files.length;f++){
+let idx=items[i].photos.findIndex(p=>p==null);
+if(idx==-1) break;
+let url=await uploadToCloudinary(files[f]);
+items[i].photos[idx]=url;
+}
 render();
-};
-reader.readAsDataURL(files[index]);
-index++;
-}
-}
 };
 
 input.click();
@@ -326,102 +273,79 @@ let input=document.createElement("input");
 input.type="file";
 input.multiple=true;
 
-input.onchange=e=>{
-let files=e.target.files;
+input.onchange=async e=>{
+let files=[...e.target.files];
 for(let f of files){
-let reader=new FileReader();
-reader.onload=(ev)=>{
-items[i].inspo.push(ev.target.result);
-};
-reader.readAsDataURL(f);
+let url=await uploadToCloudinary(f);
+items[i].inspo.push(url);
 }
+alert("Inspo uploaded!");
 };
+
 input.click();
 }
 
-function removePhoto(e,i,pi){
-e.stopPropagation();
-items[i].photos[pi]=null;
-render();
-}
-
-async function uploadToCloudinary(base64){
-let formData=new FormData();
-formData.append("file",base64);
-formData.append("upload_preset","keychain_upload");
-
-let res=await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
-method:"POST",
-body:formData
-});
-
-let data=await res.json();
-return data.secure_url;
-}
-
-async function submitOrder(){
+function submitOrder(){
 
 let name=document.getElementById("name").value;
 let email=document.getElementById("email").value;
-let school=document.getElementById("school").value;
-let grade=document.getElementById("grade").value;
-let section=document.getElementById("section").value;
 
-if(!name||!email){alert("Fill required fields");return;}
+if(!name||!email){
+alert("Fill required fields");
+return;
+}
 
 let itemsText="";
+let links="";
 let total=0;
 
-let uploadedLinks=[];
+items.forEach((item,i)=>{
 
-for(let i=0;i<items.length;i++){
-
-if(items[i].photos.includes(null)){
-alert("Each item needs 4 photos");
-return;
+if(item.photos.includes(null)){
+alert("Complete photo strip");
+throw "error";
 }
 
-if(items[i].type=="design" && !items[i].design){
-alert("Select design");
-return;
+if(item.type=="design" && !item.design && !item.create){
+alert("Select design or create");
+throw "error";
 }
 
-if(items[i].type=="custom" && !items[i].custom){
-alert("Describe your design");
-return;
+if(item.type=="custom" && !item.custom){
+alert("Describe custom");
+throw "error";
 }
 
-if(items[i].type=="plain") total+=25;
-if(items[i].type=="design") total+=30;
-if(items[i].type=="custom") total+=35;
+if(item.type=="plain") total+=25;
+if(item.type=="design") total+=30;
+if(item.type=="custom") total+=35;
 
-itemsText+=`Item ${i+1} - ${items[i].type}\n`;
+itemsText+=`Item ${i+1} - ${item.type}\n`;
 
-for(let p of items[i].photos){
-let link=await uploadToCloudinary(p);
-uploadedLinks.push(link);
-}
+item.photos.forEach((p,pi)=>{
+links+=`Item ${i+1} Photo ${pi+1}: ${p}\n`;
+});
 
-for(let p of items[i].inspo){
-let link=await uploadToCloudinary(p);
-uploadedLinks.push(link);
-}
-}
+item.inspo.forEach((p,pi)=>{
+links+=`Item ${i+1} Inspo ${pi+1}: ${p}\n`;
+});
+
+});
 
 emailjs.send("service_wuyfomj","template_wlwgyco",{
 order_number:orderNum,
 date:new Date().toLocaleDateString(),
 name:name,
 email:email,
-school:school,
-grade:grade,
-section:section,
+school:document.getElementById("school").value,
+grade:document.getElementById("grade").value,
+section:document.getElementById("section").value,
 items:itemsText,
-total:total,
-photos:uploadedLinks.join("\n")
+links:links,
+total:total
 })
 .then(()=>{
-alert("Order sent! Order #"+orderNum);
+window.location.href="thankyou.html";
 })
 .catch(()=>{
 alert("Failed to send");
