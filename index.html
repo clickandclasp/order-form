@@ -1,27 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Form</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+  <style>
+    body {
+      background: #0e2a3b;
+      color: white;
+      font-family: sans-serif;
+      padding: 30px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      display: block;
+      margin-bottom: 15px;
+      padding: 8px;
+      width: 250px;
+    }
+
+    .design-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .keychain {
+      width: 65px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: 0.2s;
+    }
+
+    .keychain.selected,
+    #createBtn.selected {
+      box-shadow: 0 0 12px #00eaff;
+      transform: scale(1.05);
+    }
+
+    #createBtn {
+      border: 2px dashed white;
+      padding: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .upload-box {
+      border: 2px dashed white;
+      padding: 20px;
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      width: 250px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>ORDER FORM</h2>
+
+<input id="name" placeholder="Name">
+<input id="email" placeholder="Email">
+
+<select id="type">
+  <option value="plain">Plain</option>
+  <option value="design">With Design</option>
+  <option value="custom">Custom</option>
+</select>
+
 <h3>Select Design</h3>
 
-<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+<div class="design-row">
 
-  <img src="design1.png" class="keychain" onclick="selectDesign(1)">
-  <img src="design2.png" class="keychain" onclick="selectDesign(2)">
-  <img src="design3.png" class="keychain" onclick="selectDesign(3)">
-  <img src="design4.png" class="keychain" onclick="selectDesign(4)">
-  <img src="design5.png" class="keychain" onclick="selectDesign(5)">
-  <img src="design6.png" class="keychain" onclick="selectDesign(6)">
-  <img src="design7.png" class="keychain" onclick="selectDesign(7)">
+  <!-- MAKE SURE THESE IMAGES EXIST -->
+  <img src="images/design1.png" class="keychain" onclick="selectDesign(1)">
+  <img src="images/design2.png" class="keychain" onclick="selectDesign(2)">
+  <img src="images/design3.png" class="keychain" onclick="selectDesign(3)">
+  <img src="images/design4.png" class="keychain" onclick="selectDesign(4)">
+  <img src="images/design5.png" class="keychain" onclick="selectDesign(5)">
+  <img src="images/design6.png" class="keychain" onclick="selectDesign(6)">
+  <img src="images/design7.png" class="keychain" onclick="selectDesign(7)">
 
-  <!-- CREATE OWN -->
-  <div id="createBtn"
-       onclick="selectDesign('create')"
-       style="
-         border:2px dashed white;
-         padding:20px;
-         border-radius:12px;
-         cursor:pointer;
-         min-width:120px;
-         text-align:center;
-       ">
+  <div id="createBtn" onclick="selectDesign('create')">
     Create Own Design
   </div>
 
 </div>
+
+<h3>Photo Strip (4 Photos)</h3>
+
+<div class="upload-box" onclick="document.getElementById('photos').click()">
+  Click to Upload Photos
+</div>
+
+<input type="file" id="photos" multiple hidden>
+
+<button onclick="submitOrder()">Submit Order</button>
+
+<script>
+emailjs.init("tp0-EdHc-e3iYbotR");
+
+// CLOUDINARY
+const CLOUD_NAME = "dacsw26s3";
+const UPLOAD_PRESET = "keychain_upload";
+
+// DESIGN NAMES
+const designNames = {
+  1: "Film Strip",
+  2: "Gwen Stacey",
+  3: "Miles Morales",
+  4: "Blue Ocean",
+  5: "Red Stripes",
+  6: "Pink Pattern",
+  7: "Yellow Sun",
+  "create": "Create Own"
+};
+
+let selectedDesign = null;
+
+function selectDesign(val) {
+  selectedDesign = val;
+
+  document.querySelectorAll(".keychain").forEach(el => el.classList.remove("selected"));
+  document.getElementById("createBtn").classList.remove("selected");
+
+  if (val === "create") {
+    document.getElementById("createBtn").classList.add("selected");
+  } else {
+    document.querySelectorAll(".keychain")[val - 1].classList.add("selected");
+  }
+}
+
+// UPLOAD FUNCTION
+async function uploadToCloudinary(file) {
+  let formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  let data = await res.json();
+  return data.secure_url;
+}
+
+async function submitOrder() {
+
+  let name = document.getElementById("name").value;
+  let email = document.getElementById("email").value;
+  let files = document.getElementById("photos").files;
+
+  if (!name || !email) {
+    alert("Please fill in name and email");
+    return;
+  }
+
+  if (!selectedDesign) {
+    alert("Please select a design");
+    return;
+  }
+
+  let links = [];
+
+  for (let file of files) {
+    let url = await uploadToCloudinary(file);
+    links.push(url);
+  }
+
+  let photoText = links.map((l, i) => `Photo ${i+1}: ${l}`).join("\n");
+
+  let templateParams = {
+    name: name,
+    email: email,
+    order_number: Math.floor(Math.random() * 100000),
+    items: "1 item",
+    links: `Design: ${designNames[selectedDesign]}\n${photoText}`,
+    total: "₱30"
+  };
+
+  emailjs.send("service_wuyfomj", "template_wlwgyco", templateParams)
+  .then(() => {
+    window.location.href = "thankyou.html";
+  })
+  .catch((err) => {
+    alert("Failed to send");
+    console.log(err);
+  });
+}
+</script>
+
+</body>
+</html>
