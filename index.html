@@ -1,172 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Order Form</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-
-  <style>
-    body {
-      background: #0e2a3b;
-      color: white;
-      font-family: sans-serif;
-      padding: 20px;
-    }
-
-    .keychain {
-      width: 70px;
-      cursor: pointer;
-      margin: 5px;
-      border-radius: 10px;
-      transition: 0.2s;
-    }
-
-    .selected {
-      box-shadow: 0 0 10px #00eaff;
-      transform: scale(1.05);
-    }
-
-    .box {
-      border: 2px dashed white;
-      padding: 20px;
-      margin: 10px 0;
-      text-align: center;
-      cursor: pointer;
-    }
-
-    button {
-      padding: 12px;
-      margin-top: 20px;
-      width: 100%;
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-
-<h2>ORDER FORM</h2>
-
-<input id="name" placeholder="Name"><br><br>
-<input id="email" placeholder="Email"><br><br>
-
-<select id="type">
-  <option value="plain">Plain</option>
-  <option value="design">With Design</option>
-  <option value="custom">Custom</option>
-</select>
-
 <h3>Select Design</h3>
 
-<div id="designs">
-  <img src="1.png" class="keychain" data-design="1" onclick="selectDesign(1)">
-  <img src="2.png" class="keychain" data-design="2" onclick="selectDesign(2)">
-  <img src="3.png" class="keychain" data-design="3" onclick="selectDesign(3)">
-  <img src="4.png" class="keychain" data-design="4" onclick="selectDesign(4)">
-  <img src="5.png" class="keychain" data-design="5" onclick="selectDesign(5)">
-  <img src="6.png" class="keychain" data-design="6" onclick="selectDesign(6)">
-  <img src="7.png" class="keychain" data-design="7" onclick="selectDesign(7)">
-  
-  <button onclick="selectDesign('create')">Create Own Design</button>
+<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+
+  <img src="design1.png" class="keychain" onclick="selectDesign(1)">
+  <img src="design2.png" class="keychain" onclick="selectDesign(2)">
+  <img src="design3.png" class="keychain" onclick="selectDesign(3)">
+  <img src="design4.png" class="keychain" onclick="selectDesign(4)">
+  <img src="design5.png" class="keychain" onclick="selectDesign(5)">
+  <img src="design6.png" class="keychain" onclick="selectDesign(6)">
+  <img src="design7.png" class="keychain" onclick="selectDesign(7)">
+
+  <!-- CREATE OWN -->
+  <div id="createBtn"
+       onclick="selectDesign('create')"
+       style="
+         border:2px dashed white;
+         padding:20px;
+         border-radius:12px;
+         cursor:pointer;
+         min-width:120px;
+         text-align:center;
+       ">
+    Create Own Design
+  </div>
+
 </div>
-
-<h3>Photo Strip (4 Photos)</h3>
-
-<div class="box" onclick="document.getElementById('photos').click()">
-  Click to Upload Photos
-</div>
-
-<input type="file" id="photos" multiple hidden>
-
-<br>
-
-<button onclick="submitOrder()">Submit Order</button>
-
-<script>
-emailjs.init("tp0-EdHc-e3iYbotR");
-
-// CLOUDINARY
-const CLOUD_NAME = "dacsw26s3";
-const UPLOAD_PRESET = "keychain_upload";
-
-// DESIGN NAMES
-const designNames = {
-  1: "Film Strip",
-  2: "Gwen Stacey",
-  3: "Miles Morales",
-  4: "Blue Ocean",
-  5: "Red Stripes",
-  6: "Pink Pattern",
-  7: "Yellow Sun",
-  "create": "Create Own"
-};
-
-let selectedDesign = null;
-
-function selectDesign(index) {
-  selectedDesign = index;
-
-  document.querySelectorAll(".keychain").forEach(el => {
-    el.classList.remove("selected");
-  });
-
-  if(index !== "create"){
-    document.querySelector(`[data-design="${index}"]`).classList.add("selected");
-  }
-}
-
-// UPLOAD TO CLOUDINARY
-async function uploadToCloudinary(file){
-  let formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
-
-  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-    method: "POST",
-    body: formData
-  });
-
-  let data = await res.json();
-  return data.secure_url;
-}
-
-async function submitOrder(){
-
-  let files = document.getElementById("photos").files;
-  let links = [];
-
-  for(let file of files){
-    let url = await uploadToCloudinary(file);
-    links.push(url);
-  }
-
-  let photoText = links.map((l,i)=>`Photo ${i+1}: ${l}`).join("\n");
-
-  let templateParams = {
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    order_number: Math.floor(Math.random()*100000),
-    items: `1 item`,
-    links: `Design: ${designNames[selectedDesign]}\n${photoText}`,
-    total: "₱30"
-  };
-
-  emailjs.send("service_wuyfomj","template_wlwgyco",templateParams)
-  .then(()=>{
-    alert("Order Sent!");
-    window.location.href = "thankyou.html";
-  })
-  .catch(err=>{
-    alert("Failed to send");
-    console.log(err);
-  });
-
-}
-</script>
-
-</body>
-</html>
