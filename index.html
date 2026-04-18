@@ -6,6 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
 <script>
 (function(){
 emailjs.init("tp0-EdHc-e3iYbotR");
@@ -19,41 +20,48 @@ font-family:'Averia Libre', cursive;
 background:#0f3550;
 color:white;
 }
-.container{max-width:420px;margin:auto;padding:20px;}
-.topbar{display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;}
 
-input, textarea{
+.container{
+max-width:420px;
+margin:auto;
+padding:20px;
+}
+
+h1{text-align:center;}
+
+input, select{
 width:100%;
 background:transparent;
 border:none;
 border-bottom:2px solid white;
 color:white;
+padding:10px;
 margin-bottom:15px;
-padding:8px;
 }
 
 select{
-width:100%;
-padding:12px;
-border-radius:12px;
 border:2px solid white;
+border-radius:10px;
+padding:12px;
 background:#0f3550;
-color:white;
-margin-bottom:10px;
 }
 
 button{
 width:100%;
 padding:14px;
-border-radius:20px;
 border:none;
+border-radius:12px;
 background:white;
 color:#0f3550;
 font-weight:bold;
 cursor:pointer;
-transition:.25s;
+transition:0.3s;
 }
-button:hover{transform:scale(1.04);}
+
+button:hover{
+transform:scale(1.05);
+box-shadow:0 0 10px rgba(255,255,255,0.5);
+}
 
 .item{
 border:1px solid white;
@@ -62,58 +70,58 @@ margin-top:20px;
 border-radius:15px;
 }
 
-.designRow{
+.designs{
 display:flex;
-gap:12px;
+gap:10px;
 overflow-x:auto;
 padding-bottom:10px;
 }
-.designRow::-webkit-scrollbar{display:none;}
 
 .design{
-width:65px;
-opacity:.5;
+width:60px;
+height:120px;
+opacity:0.5;
 cursor:pointer;
-transition:.2s;
+transition:0.3s;
 }
+
 .design.active{
 opacity:1;
 transform:scale(1.1);
+filter:drop-shadow(0 0 5px white);
 }
 
 .createBtn{
-min-width:65px;
-height:110px;
-border:2px dashed white;
+width:80px;
+height:120px;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:11px;
-text-align:center;
+border:2px dashed white;
+border-radius:10px;
 cursor:pointer;
-opacity:.5;
+opacity:0.6;
 }
+
 .createBtn.active{
 opacity:1;
-border:2px solid yellow;
+transform:scale(1.1);
+box-shadow:0 0 8px white;
 }
 
-.label{margin-top:15px;margin-bottom:8px;font-size:13px;}
-
-.strip{
+.photos{
 display:flex;
 flex-direction:column;
 gap:10px;
 }
 
 .slot{
-height:85px;
 border:2px dashed white;
+height:80px;
 display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
-font-size:12px;
 position:relative;
 }
 
@@ -125,14 +133,19 @@ object-fit:cover;
 
 .remove{
 position:absolute;
-top:4px;
-right:6px;
-font-size:12px;
+top:2px;
+right:5px;
 cursor:pointer;
 }
 
-.multiUpload{
-margin-top:15px;
+.counter{
+font-size:12px;
+margin-bottom:10px;
+}
+
+.multiBtn{
+margin-top:10px;
+background:#ffffff22;
 }
 </style>
 </head>
@@ -141,12 +154,12 @@ margin-top:15px;
 
 <div class="container">
 
-<h2>ORDER FORM</h2>
+<h1>ORDER FORM</h1>
 
-<div class="topbar">
-<div>Date: <span id="date"></span></div>
-<div>Order #: <span id="orderNum"></span></div>
-</div>
+<p>Date: <span id="date"></span></p>
+<p>Order #: <span id="order"></span></p>
+
+<h3>Customer Details</h3>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -167,15 +180,16 @@ margin-top:15px;
 <script>
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
-
+document.getElementById("order").innerText=orderNum;
 document.getElementById("date").innerText=new Date().toLocaleDateString();
-document.getElementById("orderNum").innerText=orderNum;
 
 function addItem(){
 items.push({
-type:25,
+type:"plain",
 design:null,
-photos:[null,null,null,null]
+custom:"",
+photos:[null,null,null,null],
+inspo:[]
 });
 render();
 }
@@ -185,54 +199,67 @@ let html="";
 let total=0;
 
 items.forEach((item,i)=>{
-total+=item.type;
+
+if(item.type=="plain") total+=25;
+if(item.type=="design") total+=30;
+if(item.type=="custom") total+=35;
 
 html+=`
 <div class="item">
 
+<h4>Item ${i+1}</h4>
+
 <select onchange="changeType(${i},this.value)">
-<option value="25" ${item.type==25?"selected":""}>Plain (₱25)</option>
-<option value="30" ${item.type==30?"selected":""}>With Design (₱30)</option>
+<option value="plain" ${item.type=="plain"?"selected":""}>Plain (₱25)</option>
+<option value="design" ${item.type=="design"?"selected":""}>With Design (₱30)</option>
+<option value="custom" ${item.type=="custom"?"selected":""}>Custom Request (₱35)</option>
 </select>
 
-<div class="designRow">
-
+${item.type=="design"?`
+<div class="designs">
 ${[1,2,3,4,5,6,7].map(d=>`
 <img src="design${d}.png"
 class="design ${item.design==d?"active":""}"
 onclick="selectDesign(${i},${d})">
 `).join("")}
 
-<div class="createBtn ${item.design=="create"?"active":""}"
+<div class="createBtn ${item.design=='create'?'active':''}"
 onclick="selectDesign(${i},'create')">
 Create Own Design
 </div>
-
 </div>
 
-${item.design=="create"?`
-<div style="font-size:12px;margin-top:10px;">
+${item.design=='create'?`
+<p style="font-size:12px;">
 You will receive a Canva template after ordering.  
 Please message your order# to our Social Media to request the template.
-</div>
+</p>`:""}
 `:``}
 
-<div class="label">Photo Strip (4 Photos)</div>
+${item.type=="custom"?`
+<input placeholder="Describe your design..."
+oninput="items[${i}].custom=this.value">
 
-<div class="strip">
+<button class="multiBtn" onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
+`:``}
+
+<p class="counter">${item.photos.filter(p=>p).length}/4 photos uploaded</p>
+
+<p style="font-size:12px;">Photo Strip (4 Photos)</p>
+
+<div class="photos">
 ${item.photos.map((p,pi)=>`
 <div class="slot" onclick="upload(${i},${pi})">
-${p?`<img src="${URL.createObjectURL(p)}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add"}
+${p?`<img src="${p}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add"}
 </div>
 `).join("")}
 </div>
 
-<div class="multiUpload">
-<button onclick="multiUpload(${i})">Upload Multiple Photos</button>
-</div>
+<button class="multiBtn" onclick="uploadMultiple(${i})">Upload Multiple Photos</button>
 
 </div>
 `;
+
 });
 
 document.getElementById("items").innerHTML=html;
@@ -240,8 +267,9 @@ document.getElementById("total").innerText="Total: ₱"+total;
 }
 
 function changeType(i,val){
-items[i].type=parseInt(val);
+items[i].type=val;
 items[i].design=null;
+items[i].custom="";
 render();
 }
 
@@ -256,26 +284,57 @@ input.type="file";
 input.accept="image/*";
 
 input.onchange=e=>{
-items[i].photos[pi]=e.target.files[0];
+let file=e.target.files[0];
+let reader=new FileReader();
+reader.onload=()=>{
+items[i].photos[pi]=reader.result;
 render();
+};
+reader.readAsDataURL(file);
 };
 
 input.click();
 }
 
-function multiUpload(i){
+function uploadMultiple(i){
 let input=document.createElement("input");
 input.type="file";
 input.multiple=true;
 
 input.onchange=e=>{
-let files=[...e.target.files];
+let files=e.target.files;
+let index=0;
+
 for(let j=0;j<4;j++){
-if(!items[i].photos[j] && files.length){
-items[i].photos[j]=files.shift();
-}
-}
+if(!items[i].photos[j] && files[index]){
+let reader=new FileReader();
+reader.onload=(ev)=>{
+items[i].photos[j]=ev.target.result;
 render();
+};
+reader.readAsDataURL(files[index]);
+index++;
+}
+}
+};
+
+input.click();
+}
+
+function uploadInspo(i){
+let input=document.createElement("input");
+input.type="file";
+input.multiple=true;
+
+input.onchange=e=>{
+let files=e.target.files;
+for(let f of files){
+let reader=new FileReader();
+reader.onload=(ev)=>{
+items[i].inspo.push(ev.target.result);
+};
+reader.readAsDataURL(f);
+}
 };
 input.click();
 }
@@ -286,15 +345,17 @@ items[i].photos[pi]=null;
 render();
 }
 
-async function uploadToCloudinary(file){
-const url="https://api.cloudinary.com/v1_1/dacsw26s3/image/upload";
-
-const formData=new FormData();
-formData.append("file",file);
+async function uploadToCloudinary(base64){
+let formData=new FormData();
+formData.append("file",base64);
 formData.append("upload_preset","keychain_upload");
 
-const res=await fetch(url,{method:"POST",body:formData});
-const data=await res.json();
+let res=await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
+method:"POST",
+body:formData
+});
+
+let data=await res.json();
 return data.secure_url;
 }
 
@@ -306,15 +367,12 @@ let school=document.getElementById("school").value;
 let grade=document.getElementById("grade").value;
 let section=document.getElementById("section").value;
 
-if(!name||!email){
-alert("Fill required fields");
-return;
-}
-
-alert("Uploading photos... please wait ⏳");
+if(!name||!email){alert("Fill required fields");return;}
 
 let itemsText="";
 let total=0;
+
+let uploadedLinks=[];
 
 for(let i=0;i<items.length;i++){
 
@@ -323,19 +381,34 @@ alert("Each item needs 4 photos");
 return;
 }
 
-total+=items[i].type;
+if(items[i].type=="design" && !items[i].design){
+alert("Select design");
+return;
+}
 
-itemsText+=`Item ${i+1} - ₱${items[i].type}\n`;
+if(items[i].type=="custom" && !items[i].custom){
+alert("Describe your design");
+return;
+}
+
+if(items[i].type=="plain") total+=25;
+if(items[i].type=="design") total+=30;
+if(items[i].type=="custom") total+=35;
+
+itemsText+=`Item ${i+1} - ${items[i].type}\n`;
 
 for(let p of items[i].photos){
-let url=await uploadToCloudinary(p);
-itemsText+=url+"\n";
+let link=await uploadToCloudinary(p);
+uploadedLinks.push(link);
 }
 
-itemsText+="\n";
+for(let p of items[i].inspo){
+let link=await uploadToCloudinary(p);
+uploadedLinks.push(link);
+}
 }
 
-let data={
+emailjs.send("service_wuyfomj","template_wlwgyco",{
 order_number:orderNum,
 date:new Date().toLocaleDateString(),
 name:name,
@@ -344,22 +417,17 @@ school:school,
 grade:grade,
 section:section,
 items:itemsText,
-total:total
-};
-
-emailjs.send("service_wuyfomj","template_wlwgyco",data)
-.then(()=>{
-return emailjs.send("service_wuyfomj","template_wlm8hv4",data);
+total:total,
+photos:uploadedLinks.join("\n")
 })
 .then(()=>{
-alert("Order sent successfully 💖");
+alert("Order sent! Order #"+orderNum);
 })
-.catch(err=>{
-alert("Error: "+JSON.stringify(err));
+.catch(()=>{
+alert("Failed to send");
 });
-}
 
-addItem();
+}
 </script>
 
 </body>
