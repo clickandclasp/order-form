@@ -22,25 +22,13 @@ body {
   text-align:center;
 }
 
-h1 { margin-bottom:5px; }
-
-.info {
-  font-size:14px;
-  margin-bottom:10px;
-}
-
 input, select, textarea {
   width:100%;
   padding:10px;
   margin:6px 0;
   border:none;
   border-radius:6px;
-  box-sizing:border-box; /* 🔥 THIS FIXES OVERFLOW */
-}
-
-  textarea {
-  resize:none;
-  max-width:100%;
+  box-sizing:border-box;
 }
 
 .card {
@@ -50,36 +38,54 @@ input, select, textarea {
   margin-top:15px;
 }
 
+/* DESIGN ROW */
 .design-row {
   display:flex;
   align-items:center;
   gap:10px;
-  margin-top:10px;
+  position:relative;
 }
 
 .designs {
   display:flex;
-  gap:10px;
+  gap:12px;
   overflow-x:auto;
+  scroll-behavior:smooth;
+  scrollbar-width:none;
+}
+.designs::-webkit-scrollbar {
+  display:none;
 }
 
 .designs img {
   width:55px;
   cursor:pointer;
-  border:2px solid transparent;
   border-radius:8px;
+  border:2px solid transparent;
   transition:0.2s;
 }
+.designs img:hover { transform:scale(1.05); }
+.selected { border:2px solid yellow !important; }
 
-.designs img:hover {
-  transform:scale(1.05);
+/* fade edges */
+.design-row::before,
+.design-row::after {
+  content:"";
+  position:absolute;
+  top:0; bottom:0;
+  width:25px;
+  pointer-events:none;
+}
+.design-row::before {
+  left:0;
+  background:linear-gradient(to right,#0f3b4f,transparent);
+}
+.design-row::after {
+  right:0;
+  background:linear-gradient(to left,#0f3b4f,transparent);
 }
 
-.selected {
-  border:2px solid yellow !important;
-}
-
-/* CREATE OWN SMALL FIXED BOX */
+/* CREATE OWN */
 .create-box {
   border:2px dashed white;
   width:90px;
@@ -88,28 +94,31 @@ input, select, textarea {
   align-items:center;
   justify-content:center;
   text-align:center;
-  font-size:13px;
   border-radius:10px;
   cursor:pointer;
-  padding:5px;
+  font-size:13px;
 }
 
-/* UPLOAD BOX */
+/* UPLOAD */
 .upload-box {
   border:2px dashed white;
-  padding:20px;
-  margin-top:15px;
+  padding:18px;
+  margin-top:12px;
   border-radius:10px;
   cursor:pointer;
 }
 
-/* PHOTO PREVIEW */
+/* PREVIEW */
 .preview {
   display:flex;
-  gap:10px;
-  margin-top:10px;
   flex-wrap:wrap;
+  gap:10px;
   justify-content:center;
+  margin-top:10px;
+}
+
+.preview-container {
+  position:relative;
 }
 
 .preview img {
@@ -118,11 +127,6 @@ input, select, textarea {
   object-fit:cover;
   border-radius:6px;
   border:2px solid white;
-  position:relative;
-}
-
-.preview-container {
-  position:relative;
 }
 
 .remove-btn {
@@ -153,10 +157,6 @@ button {
   margin-top:10px;
   font-size:18px;
 }
-
-textarea {
-  resize:none;
-}
 </style>
 </head>
 
@@ -165,8 +165,8 @@ textarea {
 <div class="container">
 
 <h1>ORDER FORM</h1>
-<div class="info" id="date"></div>
-<div class="info" id="order"></div>
+<div id="date"></div>
+<div id="order"></div>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -177,9 +177,7 @@ textarea {
 <div id="items"></div>
 
 <button onclick="addItem()">+ Add Keychain</button>
-
 <div class="total" id="total">Total: ₱0</div>
-
 <button onclick="submitOrder()">Submit Order</button>
 
 </div>
@@ -216,8 +214,7 @@ function addItem(){
             `<img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i})">`
           ).join("")}
         </div>
-
-        <div class="create-box" onclick="selectDesign(${itemCount}, 'custom')">
+        <div class="create-box" onclick="selectDesign(${itemCount}, 'customDesign')">
           Create Own
         </div>
       </div>
@@ -225,6 +222,13 @@ function addItem(){
 
     <div id="customSection${itemCount}" style="display:none;">
       <textarea placeholder="Custom Request..." id="customText${itemCount}"></textarea>
+
+      <div class="upload-box" onclick="triggerInspo(${itemCount})">
+        Upload Inspo Photos (optional)
+        <input type="file" id="inspo${itemCount}" multiple hidden onchange="handleInspo(${itemCount})">
+      </div>
+
+      <div class="preview" id="inspoPreview${itemCount}"></div>
     </div>
 
     <div class="upload-box" onclick="triggerUpload(${itemCount})">
@@ -240,35 +244,37 @@ function addItem(){
   allItems.push({
     type:"plain",
     design:"none",
-    files:[]
+    files:[],
+    inspo:[]
   });
 
   updateTotal();
 }
 
-function changeType(el, i){
+function changeType(el,i){
   let val = el.value;
   allItems[i-1].type = val;
 
   document.getElementById("designSection"+i).style.display =
-    val === "design" ? "block" : "none";
+    val==="design" ? "block" : "none";
 
   document.getElementById("customSection"+i).style.display =
-    val === "custom" ? "block" : "none";
+    val==="custom" ? "block" : "none";
 
   updateTotal();
 }
 
-function selectDesign(item, design){
+function selectDesign(item,design){
   allItems[item-1].design = design;
 
-  let imgs = document.querySelectorAll(`#designSection${item} img`);
-  imgs.forEach(img => img.classList.remove("selected"));
+  document.querySelectorAll(`#designSection${item} img`).forEach(img=>{
+    img.classList.remove("selected");
+  });
 
   if(typeof design === "number"){
-    imgs[design-1].classList.add("selected");
+    document.querySelectorAll(`#designSection${item} img`)[design-1].classList.add("selected");
   } else {
-    alert("Wait for Canva template after order 💌");
+    alert("Wait for Canva template after ordering 💌");
   }
 }
 
@@ -277,81 +283,97 @@ function triggerUpload(i){
 }
 
 function handleFiles(i){
-  let input = document.getElementById("file"+i);
-  let preview = document.getElementById("preview"+i);
-
-  let files = Array.from(input.files).slice(0,4);
+  let files = Array.from(document.getElementById("file"+i).files).slice(0,4);
   allItems[i-1].files = files;
 
+  let preview = document.getElementById("preview"+i);
   preview.innerHTML = "";
 
-  files.forEach((file, index)=>{
+  files.forEach((file,index)=>{
     let reader = new FileReader();
-
-    reader.onload = function(e){
-      let container = document.createElement("div");
-      container.className = "preview-container";
-
-      container.innerHTML = `
+    reader.onload = e=>{
+      let div = document.createElement("div");
+      div.className="preview-container";
+      div.innerHTML=`
         <img src="${e.target.result}">
-        <button class="remove-btn" onclick="removeImage(${i}, ${index})">x</button>
+        <button class="remove-btn" onclick="removeFile(${i},${index})">x</button>
       `;
-
-      preview.appendChild(container);
+      preview.appendChild(div);
     };
-
     reader.readAsDataURL(file);
   });
 }
 
-function removeImage(i, index){
+function removeFile(i,index){
   allItems[i-1].files.splice(index,1);
   handleFiles(i);
 }
 
+function triggerInspo(i){
+  document.getElementById("inspo"+i).click();
+}
+
+function handleInspo(i){
+  let files = Array.from(document.getElementById("inspo"+i).files);
+  allItems[i-1].inspo = files;
+
+  let preview = document.getElementById("inspoPreview"+i);
+  preview.innerHTML = "";
+
+  files.forEach((file,index)=>{
+    let reader = new FileReader();
+    reader.onload = e=>{
+      let div = document.createElement("div");
+      div.className="preview-container";
+      div.innerHTML=`
+        <img src="${e.target.result}">
+        <button class="remove-btn" onclick="removeInspo(${i},${index})">x</button>
+      `;
+      preview.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeInspo(i,index){
+  allItems[i-1].inspo.splice(index,1);
+  handleInspo(i);
+}
+
 function updateTotal(){
   let total = 0;
-
   allItems.forEach(item=>{
-    if(item.type === "plain") total += 25;
-    if(item.type === "design") total += 30;
-    if(item.type === "custom") total += 35;
+    if(item.type==="plain") total+=25;
+    if(item.type==="design") total+=30;
+    if(item.type==="custom") total+=35;
   });
-
-  document.getElementById("total").innerText = "Total: ₱" + total;
+  document.getElementById("total").innerText="Total: ₱"+total;
 }
 
 async function submitOrder(){
-  let allLinks = [];
+  let links=[];
 
   for(let item of allItems){
     for(let file of item.files){
-      let formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "keychain_upload");
+      let fd=new FormData();
+      fd.append("file",file);
+      fd.append("upload_preset","keychain_upload");
 
-      let res = await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
-        method:"POST",
-        body:formData
-      });
-
-      let data = await res.json();
-      allLinks.push(data.secure_url);
+      let res=await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{method:"POST",body:fd});
+      let data=await res.json();
+      links.push(data.secure_url);
     }
   }
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
-    order_number: orderNum,
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    total: document.getElementById("total").innerText,
-    links: allLinks.join("\n")
-  })
-  .then(()=> window.location.href="thankyou.html")
-  .catch(()=> alert("Failed to send"));
+    order_number:orderNum,
+    name:document.getElementById("name").value,
+    email:document.getElementById("email").value,
+    total:document.getElementById("total").innerText,
+    links:links.join("\n")
+  }).then(()=>window.location.href="thankyou.html");
 }
 
-// start with 1 item
 addItem();
 </script>
 
