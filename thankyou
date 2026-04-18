@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Thank You</title>
+<style>
+body{
+background:#0f3550;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+font-family:sans-serif;
+text-align:center;
+}
+</style>
+</head>
+<body>
+
+<div>
+<h1>Thank you for your order!</h1>
+<p>Please message your Order # to our social media to receive your Canva template.</p>
+</div>
+
+</body>
+</html>
