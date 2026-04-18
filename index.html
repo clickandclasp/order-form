@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Order Form</title>
+
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
 <style>
@@ -16,13 +17,18 @@ body {
 }
 
 .container {
-  width:400px;
+  width:420px;
   margin-top:30px;
   text-align:center;
 }
 
 h1 {
-  margin-bottom:10px;
+  margin-bottom:5px;
+}
+
+.info {
+  font-size:14px;
+  margin-bottom:15px;
 }
 
 input, select {
@@ -30,7 +36,7 @@ input, select {
   padding:10px;
   margin:6px 0;
   border:none;
-  border-radius:5px;
+  border-radius:6px;
 }
 
 .card {
@@ -40,17 +46,24 @@ input, select {
   margin-top:15px;
 }
 
+.design-row {
+  display:flex;
+  align-items:center;
+  gap:15px;
+  margin-top:10px;
+}
+
 .designs {
   display:flex;
   gap:10px;
   overflow-x:auto;
-  padding-bottom:10px;
+  max-width:230px;
 }
 
 .designs img {
-  width:40px;
+  width:50px;
+  border-radius:6px;
   cursor:pointer;
-  border-radius:5px;
   border:2px solid transparent;
 }
 
@@ -61,9 +74,10 @@ input, select {
 .create-btn {
   border:2px dashed white;
   padding:10px;
-  margin-top:10px;
   border-radius:10px;
   cursor:pointer;
+  min-width:130px;
+  text-align:center;
 }
 
 .upload-box {
@@ -92,8 +106,8 @@ button {
 
 <h1>ORDER FORM</h1>
 
-<div id="date"></div>
-<div id="order"></div>
+<div class="info" id="date"></div>
+<div class="info" id="order"></div>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -108,29 +122,32 @@ button {
   <option value="design">With Design (₱30)</option>
 </select>
 
-<div id="designSection">
+<!-- DESIGN SECTION -->
+<div id="designSection" style="display:none;">
 
-<p>Select Design</p>
+  <div class="design-row">
 
-<div class="designs">
-<img src="design1.png" onclick="selectDesign(1)">
-<img src="design2.png" onclick="selectDesign(2)">
-<img src="design3.png" onclick="selectDesign(3)">
-<img src="design4.png" onclick="selectDesign(4)">
-<img src="design5.png" onclick="selectDesign(5)">
-<img src="design6.png" onclick="selectDesign(6)">
-<img src="design7.png" onclick="selectDesign(7)">
-</div>
+    <div class="designs">
+      <img src="design1.png" onclick="selectDesign(1)">
+      <img src="design2.png" onclick="selectDesign(2)">
+      <img src="design3.png" onclick="selectDesign(3)">
+      <img src="design4.png" onclick="selectDesign(4)">
+      <img src="design5.png" onclick="selectDesign(5)">
+      <img src="design6.png" onclick="selectDesign(6)">
+      <img src="design7.png" onclick="selectDesign(7)">
+    </div>
 
-<div class="create-btn" onclick="selectDesign('custom')">
-Create Own Design
-</div>
+    <div class="create-btn" onclick="selectDesign('custom')">
+      Create Own Design
+    </div>
+
+  </div>
 
 </div>
 
 <div class="upload-box" onclick="fileInput.click()">
-Click to Upload Photos
-<input type="file" id="fileInput" multiple hidden>
+  Click to Upload Photos
+  <input type="file" id="fileInput" multiple hidden>
 </div>
 
 <button onclick="submitOrder()">Submit Order</button>
@@ -143,7 +160,8 @@ emailjs.init("tp0-EdHc-e3iYbotR");
 
 let selectedDesign = "none";
 
-function selectDesign(d) {
+// SELECT DESIGN
+function selectDesign(d){
   selectedDesign = d;
 
   document.querySelectorAll(".designs img").forEach(img=>{
@@ -155,23 +173,23 @@ function selectDesign(d) {
   }
 }
 
+// SHOW DESIGN ONLY IF NEEDED
 document.getElementById("type").addEventListener("change",()=>{
   let val = document.getElementById("type").value;
   document.getElementById("designSection").style.display =
     val === "design" ? "block" : "none";
 });
 
-document.getElementById("designSection").style.display="none";
-
+// DATE + ORDER #
 let today = new Date();
-document.getElementById("date").innerText = "Date: "+today.toLocaleDateString();
+document.getElementById("date").innerText = "Date: " + today.toLocaleDateString();
 let orderNum = Math.floor(Math.random()*90000)+10000;
-document.getElementById("order").innerText = "Order #: "+orderNum;
+document.getElementById("order").innerText = "Order #: " + orderNum;
 
+// SUBMIT
 async function submitOrder(){
 
   let files = document.getElementById("fileInput").files;
-
   let uploaded = [];
 
   for(let file of files){
@@ -210,9 +228,11 @@ async function submitOrder(){
     section: document.getElementById("section").value,
     design: chosenDesign,
     links: uploaded.join("\n")
-  }).then(()=>{
-    window.location.href="thankyou.html";
-  }).catch(()=>{
+  })
+  .then(()=>{
+    window.location.href = "thankyou.html";
+  })
+  .catch(()=>{
     alert("Failed to send");
   });
 
