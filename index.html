@@ -31,8 +31,6 @@ input, select, textarea {
   box-sizing:border-box;
 }
 
-textarea{ resize:none; }
-
 .card{
   border:1px solid rgba(255,255,255,0.3);
   border-radius:12px;
@@ -44,7 +42,6 @@ textarea{ resize:none; }
   display:flex;
   gap:10px;
   overflow-x:auto;
-  scrollbar-width:none;
 }
 .design-row::-webkit-scrollbar{ display:none; }
 
@@ -60,10 +57,9 @@ textarea{ resize:none; }
   border:2px solid transparent;
 }
 
-.designs img.selected,
-.create-box.selected{
-  border:2px solid #a3ff12;
-  box-shadow:0 0 6px rgba(163,255,18,0.6);
+.selected{
+  border:2px solid #a3ff12 !important;
+  box-shadow:0 0 5px rgba(163,255,18,0.5);
 }
 
 .create-box{
@@ -76,7 +72,6 @@ textarea{ resize:none; }
   justify-content:center;
   cursor:pointer;
   font-size:13px;
-  text-align:center;
 }
 
 .upload-box{
@@ -100,11 +95,6 @@ textarea{ resize:none; }
   cursor:pointer;
 }
 
-.info-note{
-  font-size:13px;
-  margin-top:8px;
-}
-
 button{
   width:100%;
   padding:12px;
@@ -117,7 +107,6 @@ button{
 
 button:disabled{
   opacity:0.5;
-  cursor:not-allowed;
 }
 </style>
 </head>
@@ -149,9 +138,20 @@ button:disabled{
 <script>
 emailjs.init("tp0-EdHc-e3iYbotR");
 
-// ✅ YOUR REAL CLOUDINARY KEYS
 let CLOUD_NAME = "dacsw26s3";
 let UPLOAD_PRESET = "keychain_upload";
+
+let dragged;
+
+let designNames = {
+  "design1.png": "Film Strip",
+  "design2.png": "Gwen Stacey",
+  "design3.png": "Miles Morales",
+  "design4.png": "Blue Ocean",
+  "design5.png": "Red Stripes",
+  "design6.png": "Pink Pattern",
+  "design7.png": "Yellow Sun"
+};
 
 let orderNum = Math.floor(Math.random()*90000)+10000;
 document.getElementById("order").innerText = "Order #: " + orderNum;
@@ -159,7 +159,6 @@ document.getElementById("date").innerText =
 "Date: " + new Date().toLocaleDateString();
 
 let itemCount = 0;
-let dragged = null;
 
 function addItem(){
   itemCount++;
@@ -189,7 +188,7 @@ function addItem(){
       </div>
 
       <div class="info-note createNote" style="display:none;">
-        You will receive a Canva template after ordering. Please message your order# to our Social Media to request the template.
+        Wait for Canva template after ordering 💌
       </div>
     </div>
 
@@ -205,7 +204,7 @@ function addItem(){
     </div>
 
     <div class="upload-box mainUpload" onclick="openFile(this)">
-      Upload Photos for Photo Strip (4 required)
+      Upload Photos (4 for photo strip)
       <input type="file" multiple hidden onchange="handleFiles(this,true)">
     </div>
 
@@ -223,15 +222,11 @@ function openFile(box){
 function toggleSections(sel){
   let card = sel.closest(".card");
 
-  card.querySelector(".designSection").style.display="none";
-  card.querySelector(".customSection").style.display="none";
+  card.querySelector(".designSection").style.display = "none";
+  card.querySelector(".customSection").style.display = "none";
 
-  if(sel.value==="design"){
-    card.querySelector(".designSection").style.display="block";
-  }
-  if(sel.value==="custom"){
-    card.querySelector(".customSection").style.display="block";
-  }
+  if(sel.value==="design") card.querySelector(".designSection").style.display="block";
+  if(sel.value==="custom") card.querySelector(".customSection").style.display="block";
 
   updateTotal();
   validateSubmit();
@@ -269,24 +264,27 @@ function handleFiles(input,isMain){
 
     let img = document.createElement("img");
     img.src = URL.createObjectURL(file);
-    img.draggable = true;
+    img.draggable=true;
 
-    img.ondragstart = ()=> dragged = wrapper;
-    img.ondrop = ()=> previewBox.insertBefore(dragged, wrapper);
+    img.ondragstart = ()=> dragged=wrapper;
     img.ondragover = e=>e.preventDefault();
+    img.ondrop = e=>{
+      e.preventDefault();
+      previewBox.insertBefore(dragged,wrapper);
+    };
 
     img.onclick = ()=>{
       let newInput = document.createElement("input");
       newInput.type="file";
       newInput.onchange=e=>{
-        let newFile = e.target.files[0];
-        img.src = URL.createObjectURL(newFile);
-        wrapper.file = newFile;
+        let newFile=e.target.files[0];
+        img.src=URL.createObjectURL(newFile);
+        wrapper.file=newFile;
       };
       newInput.click();
     };
 
-    wrapper.file = file;
+    wrapper.file=file;
     wrapper.appendChild(img);
     previewBox.appendChild(wrapper);
   });
@@ -298,7 +296,7 @@ function updateTotal(){
   let total=0;
 
   document.querySelectorAll(".card").forEach(card=>{
-    let val = card.querySelector("select").value;
+    let val=card.querySelector("select").value;
     if(val==="plain") total+=25;
     if(val==="design") total+=30;
     if(val==="custom") total+=35;
@@ -308,20 +306,16 @@ function updateTotal(){
 }
 
 function validateSubmit(){
-  let valid = true;
+  let valid=true;
 
   document.querySelectorAll(".card").forEach(card=>{
-    let type = card.querySelector("select").value;
-    let photos = card.querySelector(".mainUpload + .preview");
-
-    if(type==="plain" || type==="design"){
-      if(photos.children.length < 4){
-        valid = false;
-      }
+    let preview = card.querySelector(".mainUpload + .preview");
+    if(preview.children.length < 4){
+      valid=false;
     }
   });
 
-  document.getElementById("submitBtn").disabled = !valid;
+  document.getElementById("submitBtn").disabled=!valid;
 }
 
 async function uploadToCloudinary(file){
@@ -335,62 +329,52 @@ async function uploadToCloudinary(file){
   });
 
   let data = await res.json();
-
-  if(!data.secure_url){
-    alert("Upload failed");
-    throw new Error("Cloudinary error");
-  }
-
   return data.secure_url;
 }
 
 async function submitOrder(){
 
-  let items = [];
-  let photoLinks = [];
+  let items=[];
+  let photoLinks=[];
 
   for(let card of document.querySelectorAll(".card")){
-    let type = card.querySelector("select").value;
+    let type=card.querySelector("select").value;
     let design="None";
 
     if(type==="design"){
-      let selected = card.querySelector(".selected");
+      let selected=card.querySelector(".selected");
+
       if(selected?.classList.contains("create-box")){
         design="Create Own";
       } else if(selected){
-        design=selected.src.split("/").pop();
+        let fileName = selected.src.split("/").pop();
+        design = designNames[fileName] || fileName;
       }
     }
 
     if(type==="custom"){
-      design = card.querySelector("textarea").value || "Custom Request";
+      design=card.querySelector("textarea").value || "Custom Request";
     }
 
-    items.push({type,design});
+    items.push(`Item ${items.length+1}: ${type.toUpperCase()} - ${design}`);
 
-    let photos = card.querySelector(".mainUpload + .preview");
+    let previews=card.querySelector(".mainUpload + .preview");
 
-    for(let p of photos.children){
-      let url = await uploadToCloudinary(p.file);
+    for(let p of previews.children){
+      let url=await uploadToCloudinary(p.file);
       photoLinks.push(url);
     }
   }
 
-  let itemText = items.map((i,idx)=>
-    `Item ${idx+1}: ${i.type.toUpperCase()} - ${i.design}`
-  ).join("\n");
-
-  let photoText = photoLinks.join("\n");
-
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    school: document.getElementById("school").value,
-    grade: document.getElementById("grade").value,
-    section: document.getElementById("section").value,
-    items: itemText,
-    photos: photoText
+    name: name.value,
+    email: email.value,
+    school: school.value,
+    grade: grade.value,
+    section: section.value,
+    items: items.join("\n"),
+    photos: photoLinks.join("\n")
   })
   .then(()=>window.location.href="thankyou.html")
   .catch(()=>alert("Failed to send"));
