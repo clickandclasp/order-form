@@ -22,7 +22,14 @@ body {
   text-align:center;
 }
 
-input, select {
+h1 { margin-bottom:5px; }
+
+.info {
+  font-size:14px;
+  margin-bottom:10px;
+}
+
+input, select, textarea {
   width:100%;
   padding:10px;
   margin:6px 0;
@@ -37,56 +44,93 @@ input, select {
   margin-top:15px;
 }
 
-/* DESIGNS */
 .design-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.designs {
   display:flex;
   gap:10px;
   overflow-x:auto;
-  scrollbar-width:none;
 }
-.design-row::-webkit-scrollbar { display:none; }
 
-.design-row img {
-  width:60px;
-  border-radius:8px;
+.designs img {
+  width:55px;
   cursor:pointer;
   border:2px solid transparent;
+  border-radius:8px;
   transition:0.2s;
 }
-.design-row img:hover { transform:scale(1.05); }
+
+.designs img:hover {
+  transform:scale(1.05);
+}
 
 .selected {
   border:2px solid yellow !important;
 }
 
-/* CREATE OWN */
-.create-btn {
+/* CREATE OWN SMALL FIXED BOX */
+.create-box {
   border:2px dashed white;
-  padding:8px 12px;
+  width:90px;
+  height:110px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:13px;
   border-radius:10px;
   cursor:pointer;
-  white-space:nowrap;
-}
-.create-btn.active {
-  border-color:yellow;
-  color:yellow;
+  padding:5px;
 }
 
-/* UPLOAD */
+/* UPLOAD BOX */
 .upload-box {
   border:2px dashed white;
-  padding:25px;
-  margin-top:12px;
+  padding:20px;
+  margin-top:15px;
   border-radius:10px;
   cursor:pointer;
 }
 
-textarea {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
+/* PHOTO PREVIEW */
+.preview {
+  display:flex;
+  gap:10px;
   margin-top:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.preview img {
+  width:70px;
+  height:70px;
+  object-fit:cover;
+  border-radius:6px;
+  border:2px solid white;
+  position:relative;
+}
+
+.preview-container {
+  position:relative;
+}
+
+.remove-btn {
+  position:absolute;
+  top:-5px;
+  right:-5px;
+  background:red;
+  color:white;
+  border:none;
+  border-radius:50%;
+  width:18px;
+  height:18px;
+  font-size:12px;
+  cursor:pointer;
 }
 
 button {
@@ -98,6 +142,15 @@ button {
   background:white;
   cursor:pointer;
 }
+
+.total {
+  margin-top:10px;
+  font-size:18px;
+}
+
+textarea {
+  resize:none;
+}
 </style>
 </head>
 
@@ -106,8 +159,8 @@ button {
 <div class="container">
 
 <h1>ORDER FORM</h1>
-<div id="date"></div>
-<div id="order"></div>
+<div class="info" id="date"></div>
+<div class="info" id="order"></div>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -118,7 +171,8 @@ button {
 <div id="items"></div>
 
 <button onclick="addItem()">+ Add Keychain</button>
-<h3 id="total">Total: ₱0</h3>
+
+<div class="total" id="total">Total: ₱0</div>
 
 <button onclick="submitOrder()">Submit Order</button>
 
@@ -128,195 +182,170 @@ button {
 emailjs.init("tp0-EdHc-e3iYbotR");
 
 let orderNum = Math.floor(Math.random()*90000)+10000;
-document.getElementById("order").innerText = "Order #: " + orderNum;
 document.getElementById("date").innerText = "Date: " + new Date().toLocaleDateString();
+document.getElementById("order").innerText = "Order #: " + orderNum;
 
 let itemCount = 0;
-let total = 0;
-
-const designNames = {
-  1:"Film Strip",
-  2:"Gwen Stacey",
-  3:"Miles Morales",
-  4:"Blue Ocean",
-  5:"Red Stripes",
-  6:"Pink Pattern",
-  7:"Yellow Sun",
-  "canva":"Create Own (Canva)"
-};
+let allItems = [];
 
 function addItem(){
   itemCount++;
 
   let div = document.createElement("div");
-  div.className="card";
+  div.className = "card";
 
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select onchange="toggleSections(this, ${itemCount})">
+    <select onchange="changeType(this, ${itemCount})">
       <option value="plain">Plain (₱25)</option>
       <option value="design">With Design (₱30)</option>
       <option value="custom">Custom (₱35)</option>
     </select>
 
-    <!-- DESIGN -->
-    <div id="designBox${itemCount}" style="display:none">
-
+    <div id="designSection${itemCount}" style="display:none;">
       <div class="design-row">
-        ${[1,2,3,4,5,6,7].map(i=>`
-          <img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i}, this)">
-        `).join("")}
+        <div class="designs">
+          ${[1,2,3,4,5,6,7].map(i =>
+            `<img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i})">`
+          ).join("")}
+        </div>
 
-        <div class="create-btn" onclick="selectCanva(${itemCount}, this)">
+        <div class="create-box" onclick="selectDesign(${itemCount}, 'custom')">
           Create Own
         </div>
       </div>
-
-      <div id="canvaMsg${itemCount}" style="display:none; margin-top:10px; font-size:13px;">
-        Wait for Canva template to be sent after ordering.
-      </div>
-
     </div>
 
-    <!-- CUSTOM -->
-    <div id="customBox${itemCount}" style="display:none">
-      <textarea id="customText${itemCount}" placeholder="Custom Request..."></textarea>
-
-      <div class="upload-box" onclick="document.getElementById('inspo${itemCount}').click()">
-        Upload Inspo Photos (optional)
-        <input type="file" id="inspo${itemCount}" multiple hidden>
-      </div>
+    <div id="customSection${itemCount}" style="display:none;">
+      <textarea placeholder="Custom Request..." id="customText${itemCount}"></textarea>
     </div>
 
-    <!-- PHOTOS -->
-    <div class="upload-box" onclick="document.getElementById('file${itemCount}').click()">
+    <div class="upload-box" onclick="triggerUpload(${itemCount})">
       Upload Photos (4 only)
-      <input type="file" id="file${itemCount}" multiple hidden>
+      <input type="file" id="file${itemCount}" multiple hidden onchange="handleFiles(${itemCount})">
     </div>
+
+    <div class="preview" id="preview${itemCount}"></div>
   `;
 
   document.getElementById("items").appendChild(div);
-  updateTotal();
-}
 
-function toggleSections(select, id){
-  document.getElementById("designBox"+id).style.display="none";
-  document.getElementById("customBox"+id).style.display="none";
-
-  if(select.value==="design"){
-    document.getElementById("designBox"+id).style.display="block";
-  }
-
-  if(select.value==="custom"){
-    document.getElementById("customBox"+id).style.display="block";
-  }
+  allItems.push({
+    type:"plain",
+    design:"none",
+    files:[]
+  });
 
   updateTotal();
 }
 
-function selectDesign(item, num, el){
-  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
-  document.querySelector(`#designBox${item} .create-btn`).classList.remove("active");
+function changeType(el, i){
+  let val = el.value;
+  allItems[i-1].type = val;
 
-  el.classList.add("selected");
-  document.getElementById("canvaMsg"+item).style.display="none";
+  document.getElementById("designSection"+i).style.display =
+    val === "design" ? "block" : "none";
 
-  el.dataset.value = num;
+  document.getElementById("customSection"+i).style.display =
+    val === "custom" ? "block" : "none";
+
+  updateTotal();
 }
 
-function selectCanva(item, el){
-  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
-  el.classList.add("active");
+function selectDesign(item, design){
+  allItems[item-1].design = design;
 
-  document.getElementById("canvaMsg"+item).style.display="block";
+  let imgs = document.querySelectorAll(`#designSection${item} img`);
+  imgs.forEach(img => img.classList.remove("selected"));
 
-  el.dataset.value = "canva";
+  if(typeof design === "number"){
+    imgs[design-1].classList.add("selected");
+  } else {
+    alert("Wait for Canva template after order 💌");
+  }
+}
+
+function triggerUpload(i){
+  document.getElementById("file"+i).click();
+}
+
+function handleFiles(i){
+  let input = document.getElementById("file"+i);
+  let preview = document.getElementById("preview"+i);
+
+  let files = Array.from(input.files).slice(0,4);
+  allItems[i-1].files = files;
+
+  preview.innerHTML = "";
+
+  files.forEach((file, index)=>{
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+      let container = document.createElement("div");
+      container.className = "preview-container";
+
+      container.innerHTML = `
+        <img src="${e.target.result}">
+        <button class="remove-btn" onclick="removeImage(${i}, ${index})">x</button>
+      `;
+
+      preview.appendChild(container);
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeImage(i, index){
+  allItems[i-1].files.splice(index,1);
+  handleFiles(i);
 }
 
 function updateTotal(){
-  total = 0;
+  let total = 0;
 
-  document.querySelectorAll("#items select").forEach(sel=>{
-    if(sel.value==="plain") total+=25;
-    if(sel.value==="design") total+=30;
-    if(sel.value==="custom") total+=35;
+  allItems.forEach(item=>{
+    if(item.type === "plain") total += 25;
+    if(item.type === "design") total += 30;
+    if(item.type === "custom") total += 35;
   });
 
-  document.getElementById("total").innerText = "Total: ₱"+total;
+  document.getElementById("total").innerText = "Total: ₱" + total;
 }
 
 async function submitOrder(){
+  let allLinks = [];
 
-  let allData = "";
-
-  for(let i=1;i<=itemCount;i++){
-
-    let files = document.getElementById("file"+i).files;
-
-    if(files.length !== 4){
-      alert(`Item ${i}: Upload exactly 4 photos`);
-      return;
-    }
-
-    let uploaded=[];
-
-    for(let f of files){
-      let fd = new FormData();
-      fd.append("file", f);
-      fd.append("upload_preset","keychain_upload");
+  for(let item of allItems){
+    for(let file of item.files){
+      let formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "keychain_upload");
 
       let res = await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
         method:"POST",
-        body:fd
+        body:formData
       });
 
       let data = await res.json();
-      uploaded.push(data.secure_url);
+      allLinks.push(data.secure_url);
     }
-
-    let type = document.querySelectorAll("#items select")[i-1].value;
-    let design = "None";
-
-    let selectedImg = document.querySelector(`#designBox${i} img.selected`);
-    let canva = document.querySelector(`#designBox${i} .create-btn.active`);
-
-    if(selectedImg){
-      let index = Array.from(selectedImg.parentNode.children).indexOf(selectedImg)+1;
-      design = designNames[index];
-    }
-
-    if(canva){
-      design = "Create Own (Canva)";
-    }
-
-    let customText = document.getElementById("customText"+i)?.value || "";
-
-    allData += `
-Item ${i}
-Type: ${type}
-Design: ${design}
-Custom: ${customText}
-Photos:
-${uploaded.join("\n")}
----------------------
-`;
   }
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
-    name: name.value,
-    email: email.value,
-    school: school.value,
-    grade: grade.value,
-    section: section.value,
-    message: allData,
-    total: total
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    total: document.getElementById("total").innerText,
+    links: allLinks.join("\n")
   })
-  .then(()=>window.location.href="thankyou.html")
-  .catch(()=>alert("Failed to send"));
+  .then(()=> window.location.href="thankyou.html")
+  .catch(()=> alert("Failed to send"));
 }
 
+// start with 1 item
 addItem();
 </script>
 
