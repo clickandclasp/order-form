@@ -102,9 +102,10 @@ input, select, textarea{
   border-radius:6px;
 }
 
-.small{
-  font-size:12px;
-  opacity:0.8;
+.info-note{
+  font-size:13px;
+  margin-top:8px;
+  opacity:0.9;
 }
 
 button{
@@ -161,12 +162,13 @@ function addItem(){
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select onchange="toggleDesign(this)">
+    <select onchange="toggleSections(this)">
       <option value="plain">Plain (₱25)</option>
       <option value="design">With Design (₱30)</option>
       <option value="custom">Custom (₱35)</option>
     </select>
 
+    <!-- WITH DESIGN -->
     <div class="designSection" style="display:none">
 
       <div class="design-row">
@@ -176,25 +178,30 @@ function addItem(){
           `).join("")}
         </div>
 
-        <div class="create-box" onclick="selectCustom(this)">
+        <div class="create-box" onclick="selectCreateOwn(this)">
           Create Own
         </div>
       </div>
 
-      <!-- CUSTOM SECTION (hidden until clicked) -->
-      <div class="customArea" style="display:none; margin-top:10px;">
-        <textarea placeholder="Custom Request..."></textarea>
-
-        <div class="upload-box" onclick="this.nextElementSibling.click()">
-          Upload Inspo Photos (optional)
-          <input type="file" multiple hidden onchange="preview(this)">
-        </div>
-
-        <div class="preview"></div>
+      <div class="info-note createNote" style="display:none;">
+        After ordering, wait for your Canva template link 💌
       </div>
 
     </div>
 
+    <!-- CUSTOM -->
+    <div class="customSection" style="display:none;">
+      <textarea placeholder="Custom Request..."></textarea>
+
+      <div class="upload-box" onclick="this.nextElementSibling.click()">
+        Upload Inspo Photos (optional)
+        <input type="file" multiple hidden onchange="preview(this)">
+      </div>
+
+      <div class="preview"></div>
+    </div>
+
+    <!-- MAIN PHOTOS -->
     <div class="upload-box" onclick="this.nextElementSibling.click()">
       Upload Photos (4 only)
       <input type="file" multiple hidden onchange="preview(this)">
@@ -207,35 +214,42 @@ function addItem(){
   updateTotal();
 }
 
-function toggleDesign(sel){
+function toggleSections(sel){
   let card = sel.closest(".card");
-  let section = card.querySelector(".designSection");
 
-  section.style.display = (sel.value !== "plain") ? "block" : "none";
+  card.querySelector(".designSection").style.display = "none";
+  card.querySelector(".customSection").style.display = "none";
+
+  if(sel.value === "design"){
+    card.querySelector(".designSection").style.display = "block";
+  }
+
+  if(sel.value === "custom"){
+    card.querySelector(".customSection").style.display = "block";
+  }
 
   updateTotal();
 }
 
 function selectDesign(img){
-  let parent = img.closest(".card");
+  let card = img.closest(".card");
 
-  parent.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
-  parent.querySelector(".create-box").classList.remove("selected");
+  card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
+  card.querySelector(".create-box").classList.remove("selected");
 
   img.classList.add("selected");
 
-  // hide custom area
-  parent.querySelector(".customArea").style.display = "none";
+  card.querySelector(".createNote").style.display = "none";
 }
 
-function selectCustom(box){
-  let parent = box.closest(".card");
+function selectCreateOwn(box){
+  let card = box.closest(".card");
 
-  parent.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
+  card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
   box.classList.add("selected");
 
-  // SHOW custom section (instead of popup)
-  parent.querySelector(".customArea").style.display = "block";
+  // show note instead of popup
+  card.querySelector(".createNote").style.display = "block";
 }
 
 function preview(input){
@@ -255,38 +269,38 @@ function updateTotal(){
   document.querySelectorAll(".card").forEach(card=>{
     let val = card.querySelector("select").value;
 
-    if(val === "plain") total += 25;
-    if(val === "design") total += 30;
-    if(val === "custom") total += 35;
+    if(val==="plain") total+=25;
+    if(val==="design") total+=30;
+    if(val==="custom") total+=35;
   });
 
-  document.getElementById("total").innerText = "Total: ₱" + total;
+  document.getElementById("total").innerText = "Total: ₱"+total;
 }
 
-async function submitOrder(){
+function submitOrder(){
 
   let items = [];
 
-  for(let card of document.querySelectorAll(".card")){
-
+  document.querySelectorAll(".card").forEach(card=>{
     let type = card.querySelector("select").value;
 
     let design = "None";
 
-    if(type === "custom"){
-      design = "Create Own";
-    } else {
-      let selectedImg = card.querySelector("img.selected");
-      if(selectedImg){
-        design = selectedImg.src.split("/").pop();
+    if(type==="design"){
+      let selected = card.querySelector(".selected");
+      if(selected && selected.classList.contains("create-box")){
+        design = "Create Own";
+      } else if(selected){
+        design = selected.src.split("/").pop();
       }
     }
 
-    items.push({
-      type,
-      design
-    });
-  }
+    if(type==="custom"){
+      design = "Custom Request";
+    }
+
+    items.push({type,design});
+  });
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
@@ -297,12 +311,8 @@ async function submitOrder(){
     section: document.getElementById("section").value,
     items: JSON.stringify(items)
   })
-  .then(()=>{
-    window.location.href="thankyou.html";
-  })
-  .catch(()=>{
-    alert("Failed to send");
-  });
+  .then(()=>window.location.href="thankyou.html")
+  .catch(()=>alert("Failed to send"));
 }
 
 addItem();
