@@ -37,90 +37,79 @@ input, select {
   margin-top:15px;
 }
 
-.item {
-  margin-top:15px;
-  border:1px solid rgba(255,255,255,0.2);
-  padding:12px;
-  border-radius:10px;
-}
-
 /* DESIGN ROW */
 .design-row {
   display:flex;
+  gap:10px;
   align-items:center;
-  gap:10px;
-  margin-top:10px;
+  overflow-x:auto;
+  padding-bottom:5px;
+  scrollbar-width:none;
+}
+.design-row::-webkit-scrollbar {
+  display:none;
 }
 
-/* KEYCHAINS */
-.designs {
-  display:flex;
-  gap:10px;
-}
-
-.designs img {
-  width:55px;
+.design-row img {
+  width:60px;
   cursor:pointer;
   border-radius:8px;
   border:2px solid transparent;
   transition:0.2s;
 }
 
-.designs img:hover {
-  transform:scale(1.1);
+.design-row img:hover {
+  transform:scale(1.05);
 }
 
-.designs img.selected {
-  border:2px solid yellow;
-  transform:scale(1.1);
+.selected {
+  border:2px solid yellow !important;
+  transform:scale(1.08);
 }
 
-/* CREATE OWN BUTTON */
+/* CREATE OWN */
 .create-btn {
   border:2px dashed white;
-  padding:8px 10px;
+  padding:8px 12px;
   border-radius:10px;
   cursor:pointer;
   white-space:nowrap;
   transition:0.2s;
 }
 
-.create-btn:hover {
-  background:rgba(255,255,255,0.1);
-}
-
 .create-btn.active {
-  border:2px solid yellow;
+  border-color:yellow;
+  color:yellow;
 }
 
 /* UPLOAD */
 .upload-box {
   border:2px dashed white;
   padding:25px;
-  margin-top:15px;
+  margin-top:12px;
   border-radius:10px;
   cursor:pointer;
-  transition:0.2s;
 }
 
-.upload-box:hover {
-  background:rgba(255,255,255,0.1);
-}
-
+/* BUTTON */
 button {
   width:100%;
   padding:12px;
-  margin-top:10px;
+  margin-top:15px;
   border:none;
   border-radius:10px;
   background:white;
   cursor:pointer;
 }
 
-.total {
-  margin-top:15px;
-  font-size:18px;
+textarea {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-top:10px;
 }
+
 </style>
 </head>
 
@@ -141,8 +130,7 @@ button {
 <div id="items"></div>
 
 <button onclick="addItem()">+ Add Keychain</button>
-
-<div class="total" id="total">Total: ₱0</div>
+<h3 id="total">Total: ₱0</h3>
 
 <button onclick="submitOrder()">Submit Order</button>
 
@@ -153,36 +141,53 @@ emailjs.init("tp0-EdHc-e3iYbotR");
 
 let orderNum = Math.floor(Math.random()*90000)+10000;
 document.getElementById("order").innerText = "Order #: " + orderNum;
-document.getElementById("date").innerText =
-  "Date: " + new Date().toLocaleDateString();
+document.getElementById("date").innerText = "Date: " + new Date().toLocaleDateString();
 
 let itemCount = 0;
-let items = [];
+let total = 0;
+
+const designNames = {
+  1:"Film Strip",
+  2:"Gwen Stacey",
+  3:"Miles Morales",
+  4:"Blue Ocean",
+  5:"Red Stripes",
+  6:"Pink Pattern",
+  7:"Yellow Sun",
+  "custom":"Create Own"
+};
 
 function addItem(){
   itemCount++;
 
   let div = document.createElement("div");
-  div.className = "item";
+  div.className="card";
 
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select id="type${itemCount}" onchange="toggleDesign(${itemCount}); updateTotal();">
-      <option value="25">Plain (₱25)</option>
-      <option value="30">With Design (₱30)</option>
+    <select onchange="toggleDesign(this, ${itemCount})">
+      <option value="plain">Plain (₱25)</option>
+      <option value="design">With Design (₱30)</option>
     </select>
 
-    <div class="design-row" id="designRow${itemCount}" style="display:none;">
-      
-      <div class="designs" id="designs${itemCount}">
-        ${[1,2,3,4,5,6,7].map(i =>
-          `<img src="design${i}.png" onclick="selectDesign(${itemCount},${i})">`
-        ).join("")}
+    <div id="designBox${itemCount}" style="display:none">
+
+      <div class="design-row">
+        ${[1,2,3,4,5,6,7].map(i=>`
+          <img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i}, this)">
+        `).join("")}
+
+        <div class="create-btn" onclick="selectCustom(${itemCount}, this)">
+          Create Own
+        </div>
       </div>
 
-      <div class="create-btn" id="custom${itemCount}" onclick="selectDesign(${itemCount},'custom')">
-        Create Own
+      <textarea id="customText${itemCount}" placeholder="Custom Request..." style="display:none"></textarea>
+
+      <div class="upload-box" onclick="document.getElementById('inspo${itemCount}').click()" style="display:none" id="inspoBox${itemCount}">
+        Upload Inspo Photos (optional)
+        <input type="file" id="inspo${itemCount}" multiple hidden>
       </div>
 
     </div>
@@ -194,74 +199,70 @@ function addItem(){
   `;
 
   document.getElementById("items").appendChild(div);
+  updateTotal();
+}
 
-  items.push({
-    design: "None",
-    price:25
-  });
+function toggleDesign(select, id){
+  let box = document.getElementById("designBox"+id);
+
+  if(select.value==="design"){
+    box.style.display="block";
+  } else {
+    box.style.display="none";
+  }
 
   updateTotal();
 }
 
-function toggleDesign(i){
-  let val = document.getElementById("type"+i).value;
-  document.getElementById("designRow"+i).style.display =
-    val == "30" ? "flex" : "none";
+function selectDesign(item, num, el){
+  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
+  document.querySelector(`#designBox${item} .create-btn`).classList.remove("active");
+
+  el.classList.add("selected");
+
+  document.getElementById("customText"+item).style.display="none";
+  document.getElementById("inspoBox"+item).style.display="none";
+
+  el.dataset.value = num;
 }
 
-function selectDesign(item, design){
+function selectCustom(item, el){
+  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
+  el.classList.add("active");
 
-  let imgs = document.querySelectorAll(`#designs${item} img`);
-  let customBtn = document.getElementById("custom"+item);
+  document.getElementById("customText"+item).style.display="block";
+  document.getElementById("inspoBox"+item).style.display="block";
 
-  imgs.forEach(i=>i.classList.remove("selected"));
-  customBtn.classList.remove("active");
-
-  if(typeof design === "number"){
-    imgs[design-1].classList.add("selected");
-  } else {
-    customBtn.classList.add("active");
-  }
-
-  let names = {
-    1:"Film Strip",
-    2:"Gwen Stacey",
-    3:"Miles Morales",
-    4:"Blue Ocean",
-    5:"Red Stripes",
-    6:"Pink Pattern",
-    7:"Yellow Sun",
-    "custom":"Create Own"
-  };
-
-  items[item-1].design = names[design];
+  el.dataset.value = "custom";
 }
 
 function updateTotal(){
-  let total = 0;
+  total = 0;
+  document.querySelectorAll("#items select").forEach(sel=>{
+    total += sel.value==="plain" ? 25 : 30;
+  });
 
-  for(let i=1;i<=itemCount;i++){
-    let val = parseInt(document.getElementById("type"+i).value);
-    items[i-1].price = val;
-    total += val;
-  }
-
-  document.getElementById("total").innerText = "Total: ₱" + total;
+  document.getElementById("total").innerText = "Total: ₱"+total;
 }
 
 async function submitOrder(){
 
-  let allLinks = "";
+  let allData = "";
 
   for(let i=1;i<=itemCount;i++){
 
     let files = document.getElementById("file"+i).files;
-    let links = [];
+    if(files.length !== 4){
+      alert(`Item ${i}: Upload exactly 4 photos`);
+      return;
+    }
 
-    for(let file of files){
+    let uploaded=[];
+
+    for(let f of files){
       let fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", "keychain_upload");
+      fd.append("file", f);
+      fd.append("upload_preset","keychain_upload");
 
       let res = await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
         method:"POST",
@@ -269,30 +270,54 @@ async function submitOrder(){
       });
 
       let data = await res.json();
-      links.push(data.secure_url);
+      uploaded.push(data.secure_url);
     }
 
-    allLinks += `Item ${i} (${items[i-1].design}):\n` + links.join("\n") + "\n\n";
+    let design = "None";
+
+    let selectedImg = document.querySelector(`#designBox${i} img.selected`);
+    let customBtn = document.querySelector(`#designBox${i} .create-btn.active`);
+
+    if(selectedImg){
+      let index = Array.from(selectedImg.parentNode.children).indexOf(selectedImg)+1;
+      design = designNames[index];
+    }
+
+    if(customBtn){
+      design = "Create Own";
+    }
+
+    let customText = document.getElementById("customText"+i)?.value || "";
+
+    allData += `
+Item ${i}
+Design: ${design}
+Custom: ${customText}
+Photos:
+${uploaded.join("\n")}
+---------------------
+`;
   }
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    school: document.getElementById("school").value,
-    grade: document.getElementById("grade").value,
-    section: document.getElementById("section").value,
-    links: allLinks,
-    total: document.getElementById("total").innerText
+    name: name.value,
+    email: email.value,
+    school: school.value,
+    grade: grade.value,
+    section: section.value,
+    message: allData,
+    total: total
   })
   .then(()=>{
-    window.location.href = "thankyou.html";
+    window.location.href="thankyou.html";
   })
   .catch(()=>{
     alert("Failed to send");
   });
 }
 
+// start with 1 item
 addItem();
 </script>
 
