@@ -37,11 +37,10 @@ input, select {
   margin-top:15px;
 }
 
-/* DESIGN ROW */
+/* DESIGNS */
 .design-row {
   display:flex;
   gap:10px;
-  align-items:center;
   overflow-x:auto;
   scrollbar-width:none;
 }
@@ -49,21 +48,28 @@ input, select {
 
 .design-row img {
   width:60px;
-  cursor:pointer;
   border-radius:8px;
+  cursor:pointer;
   border:2px solid transparent;
   transition:0.2s;
 }
 .design-row img:hover { transform:scale(1.05); }
-.selected { border:2px solid yellow !important; }
 
-/* CREATE */
+.selected {
+  border:2px solid yellow !important;
+}
+
+/* CREATE OWN */
 .create-btn {
   border:2px dashed white;
   padding:8px 12px;
   border-radius:10px;
   cursor:pointer;
   white-space:nowrap;
+}
+.create-btn.active {
+  border-color:yellow;
+  color:yellow;
 }
 
 /* UPLOAD */
@@ -75,6 +81,14 @@ input, select {
   cursor:pointer;
 }
 
+textarea {
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  margin-top:10px;
+}
+
 button {
   width:100%;
   padding:12px;
@@ -83,14 +97,6 @@ button {
   border-radius:10px;
   background:white;
   cursor:pointer;
-}
-
-textarea {
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  margin-top:10px;
 }
 </style>
 </head>
@@ -135,7 +141,8 @@ const designNames = {
   4:"Blue Ocean",
   5:"Red Stripes",
   6:"Pink Pattern",
-  7:"Yellow Sun"
+  7:"Yellow Sun",
+  "canva":"Create Own (Canva)"
 };
 
 function addItem(){
@@ -155,11 +162,21 @@ function addItem(){
 
     <!-- DESIGN -->
     <div id="designBox${itemCount}" style="display:none">
+
       <div class="design-row">
         ${[1,2,3,4,5,6,7].map(i=>`
           <img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i}, this)">
         `).join("")}
+
+        <div class="create-btn" onclick="selectCanva(${itemCount}, this)">
+          Create Own
+        </div>
       </div>
+
+      <div id="canvaMsg${itemCount}" style="display:none; margin-top:10px; font-size:13px;">
+        Wait for Canva template to be sent after ordering.
+      </div>
+
     </div>
 
     <!-- CUSTOM -->
@@ -200,8 +217,21 @@ function toggleSections(select, id){
 
 function selectDesign(item, num, el){
   document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
+  document.querySelector(`#designBox${item} .create-btn`).classList.remove("active");
+
   el.classList.add("selected");
+  document.getElementById("canvaMsg"+item).style.display="none";
+
   el.dataset.value = num;
+}
+
+function selectCanva(item, el){
+  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
+  el.classList.add("active");
+
+  document.getElementById("canvaMsg"+item).style.display="block";
+
+  el.dataset.value = "canva";
 }
 
 function updateTotal(){
@@ -247,20 +277,20 @@ async function submitOrder(){
 
     let type = document.querySelectorAll("#items select")[i-1].value;
     let design = "None";
-    let customText = "";
 
-    if(type==="design"){
-      let selected = document.querySelector(`#designBox${i} img.selected`);
-      if(selected){
-        let index = Array.from(selected.parentNode.children).indexOf(selected)+1;
-        design = designNames[index];
-      }
+    let selectedImg = document.querySelector(`#designBox${i} img.selected`);
+    let canva = document.querySelector(`#designBox${i} .create-btn.active`);
+
+    if(selectedImg){
+      let index = Array.from(selectedImg.parentNode.children).indexOf(selectedImg)+1;
+      design = designNames[index];
     }
 
-    if(type==="custom"){
-      design = "Create Own";
-      customText = document.getElementById("customText"+i).value;
+    if(canva){
+      design = "Create Own (Canva)";
     }
+
+    let customText = document.getElementById("customText"+i)?.value || "";
 
     allData += `
 Item ${i}
@@ -283,15 +313,10 @@ ${uploaded.join("\n")}
     message: allData,
     total: total
   })
-  .then(()=>{
-    window.location.href="thankyou.html";
-  })
-  .catch(()=>{
-    alert("Failed to send");
-  });
+  .then(()=>window.location.href="thankyou.html")
+  .catch(()=>alert("Failed to send"));
 }
 
-// start
 addItem();
 </script>
 
