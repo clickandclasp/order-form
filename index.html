@@ -22,7 +22,6 @@ body{
   text-align:center;
 }
 
-/* INPUT FIX */
 input, select, textarea{
   width:100%;
   padding:10px;
@@ -37,15 +36,25 @@ textarea{
   height:80px;
 }
 
-/* CARD */
+/* CARD ANIMATION */
 .card{
   border:1px solid rgba(255,255,255,0.3);
   border-radius:12px;
   padding:15px;
   margin-top:15px;
+  opacity:0;
+  transform:translateY(15px);
+  animation:fadeIn 0.35s ease forwards;
 }
 
-/* SCROLL FIX */
+@keyframes fadeIn{
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* SCROLLBAR */
 .design-row{
   display:flex;
   gap:10px;
@@ -60,7 +69,7 @@ textarea{
   border-radius:10px;
 }
 
-/* DESIGN STYLE */
+/* DESIGNS */
 .designs{
   display:flex;
   gap:10px;
@@ -70,12 +79,12 @@ textarea{
   width:55px;
   border-radius:6px;
   cursor:pointer;
-  opacity:0.4; /* DIM ALL */
+  opacity:0.4;
   transition:0.2s;
 }
 
 .designs img.selected{
-  opacity:1; /* FULL COLOR */
+  opacity:1;
 }
 
 .create-box{
@@ -94,6 +103,20 @@ textarea{
 
 .create-box.selected{
   opacity:1;
+}
+
+/* DROPDOWN */
+.select-wrapper{
+  position:relative;
+}
+
+select{
+  appearance:none;
+  transition:0.2s ease;
+}
+
+select:focus{
+  transform:scale(1.02);
 }
 
 /* UPLOAD */
@@ -119,6 +142,7 @@ textarea{
   cursor:pointer;
 }
 
+/* BUTTON */
 button{
   width:100%;
   padding:12px;
@@ -180,11 +204,13 @@ function addItem(){
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select onchange="toggleSections(this)">
-      <option value="plain">Plain (₱25)</option>
-      <option value="design">With Design (₱30)</option>
-      <option value="custom">Custom (₱35)</option>
-    </select>
+    <div class="select-wrapper">
+      <select onchange="toggleSections(this)">
+        <option value="plain">Plain (₱25)</option>
+        <option value="design">With Design (₱30)</option>
+        <option value="custom">Custom (₱35)</option>
+      </select>
+    </div>
 
     <div class="designSection" style="display:none">
       <div class="design-row">
@@ -200,101 +226,93 @@ function addItem(){
       </div>
     </div>
 
-    <!-- CUSTOM (FIXED) -->
     <div class="customSection" style="display:none;">
       <textarea placeholder="Custom Request..."></textarea>
 
       <div class="upload-box" onclick="openFile(this)">
         Upload Inspo Photos (optional)
-        <input type="file" multiple hidden onchange="handleFiles(this, false)">
+        <input type="file" multiple hidden onchange="handleFiles(this,false)">
       </div>
 
       <div class="preview"></div>
     </div>
 
-    <!-- MAIN PHOTO STRIP -->
     <div class="upload-box mainUpload" onclick="openFile(this)">
       Upload Photos (4 for photo strip)
-      <input type="file" multiple hidden onchange="handleFiles(this, true)">
+      <input type="file" multiple hidden onchange="handleFiles(this,true)">
     </div>
 
     <div class="preview"></div>
   `;
 
   document.getElementById("items").appendChild(div);
+
+  setTimeout(()=>{
+    div.style.animation="none";
+    div.offsetHeight;
+    div.style.animation="";
+  },10);
+
   updateTotal();
 }
 
-/* FILE */
+/* KEEP ALL LOGIC SAME BELOW */
+
 function openFile(box){
   box.querySelector("input").click();
 }
 
-/* TOGGLE */
 function toggleSections(sel){
   let card = sel.closest(".card");
 
-  card.querySelector(".designSection").style.display = "none";
-  card.querySelector(".customSection").style.display = "none";
+  card.querySelector(".designSection").style.display="none";
+  card.querySelector(".customSection").style.display="none";
 
-  if(sel.value==="design"){
-    card.querySelector(".designSection").style.display="block";
-  }
-
-  if(sel.value==="custom"){
-    card.querySelector(".customSection").style.display="block";
-  }
+  if(sel.value==="design") card.querySelector(".designSection").style.display="block";
+  if(sel.value==="custom") card.querySelector(".customSection").style.display="block";
 
   updateTotal();
   validateSubmit();
 }
 
-/* SELECT DESIGN */
 function selectDesign(img){
   let card = img.closest(".card");
-
   card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
   card.querySelector(".create-box").classList.remove("selected");
-
   img.classList.add("selected");
 }
 
-/* CREATE OWN */
 function selectCreateOwn(box){
   let card = box.closest(".card");
-
   card.querySelectorAll("img").forEach(i=>i.classList.remove("selected"));
   box.classList.add("selected");
 }
 
-/* FILE HANDLER */
-function handleFiles(input, isMain){
+function handleFiles(input,isMain){
   let previewBox = input.parentElement.nextElementSibling;
-  let files = [...input.files];
-
-  if(isMain) files = files.slice(0,4);
+  let files=[...input.files];
+  if(isMain) files=files.slice(0,4);
 
   previewBox.innerHTML="";
 
   files.forEach(file=>{
-    let wrapper = document.createElement("div");
+    let wrapper=document.createElement("div");
+    let img=document.createElement("img");
 
-    let img = document.createElement("img");
-    img.src = URL.createObjectURL(file);
-    img.draggable = true;
+    img.src=URL.createObjectURL(file);
 
-    img.onclick = ()=>{
-      let newInput = document.createElement("input");
+    img.onclick=()=>{
+      let newInput=document.createElement("input");
       newInput.type="file";
       newInput.onchange=e=>{
-        let newFile = e.target.files[0];
-        img.src = URL.createObjectURL(newFile);
-        wrapper.file = newFile;
+        let newFile=e.target.files[0];
+        img.src=URL.createObjectURL(newFile);
+        wrapper.file=newFile;
       };
       newInput.click();
     };
 
-    wrapper.file = file;
+    wrapper.file=file;
     wrapper.appendChild(img);
     previewBox.appendChild(wrapper);
   });
@@ -302,56 +320,47 @@ function handleFiles(input, isMain){
   validateSubmit();
 }
 
-/* TOTAL */
 function updateTotal(){
   let total=0;
-
   document.querySelectorAll(".card").forEach(card=>{
-    let val = card.querySelector("select").value;
+    let val=card.querySelector("select").value;
     if(val==="plain") total+=25;
     if(val==="design") total+=30;
     if(val==="custom") total+=35;
   });
-
   document.getElementById("total").innerText="Total: ₱"+total;
 }
 
-/* VALIDATE */
 function validateSubmit(){
-  let valid = true;
-
+  let valid=true;
   document.querySelectorAll(".card").forEach(card=>{
-    let photos = card.querySelector(".mainUpload + .preview");
-    if(photos.children.length < 4){
-      valid = false;
-    }
+    let photos=card.querySelector(".mainUpload + .preview");
+    if(photos.children.length<4) valid=false;
   });
-
-  document.getElementById("submitBtn").disabled = !valid;
+  document.getElementById("submitBtn").disabled=!valid;
 }
 
-/* UPLOAD */
 async function uploadToCloudinary(file){
-  let formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
+  let fd=new FormData();
+  fd.append("file",file);
+  fd.append("upload_preset",UPLOAD_PRESET);
 
-  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
+  let res=await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
     method:"POST",
-    body:formData
+    body:fd
   });
 
-  let data = await res.json();
+  let data=await res.json();
   return data.secure_url;
 }
 
-/* SUBMIT */
 async function submitOrder(){
 
-  let items = [];
-  let photoLinks = [];
+  let btn=document.getElementById("submitBtn");
+  btn.disabled=true;
+  btn.innerText="Uploading...";
 
-  let designNames = {
+  let designNames={
     "1":"Film Strip",
     "2":"Gwen Stacey",
     "3":"Miles Morales",
@@ -361,49 +370,57 @@ async function submitOrder(){
     "7":"Yellow Sun"
   };
 
+  let items=[];
+  let photosText="";
+  let index=1;
+
   for(let card of document.querySelectorAll(".card")){
-    let type = card.querySelector("select").value;
-    let design = "None";
+    let type=card.querySelector("select").value;
+    let design="None";
 
     if(type==="design"){
-      let selected = card.querySelector(".selected");
-      if(selected?.classList.contains("create-box")){
-        design="Create Own";
-      } else if(selected){
-        let id = selected.dataset.name;
-        design = designNames[id];
-      }
+      let sel=card.querySelector(".selected");
+      if(sel?.classList.contains("create-box")) design="Create Own";
+      else if(sel) design=designNames[sel.dataset.name];
     }
 
     if(type==="custom"){
-      design = card.querySelector("textarea").value || "Custom Request";
+      design=card.querySelector("textarea").value || "Custom Request";
     }
 
-    items.push({type, design});
+    items.push(`Item ${index}: ${type.toUpperCase()} - ${design}`);
 
-    let photos = card.querySelector(".mainUpload + .preview");
+    let links=[];
+    let photos=card.querySelector(".mainUpload + .preview");
 
     for(let p of photos.children){
-      let url = await uploadToCloudinary(p.file);
-      photoLinks.push(url);
+      let url=await uploadToCloudinary(p.file);
+      links.push(url);
     }
+
+    photosText+=`Item ${index} Photos:\n${links.join("\n")}\n\n`;
+    index++;
   }
 
-  let totalText = document.getElementById("total").innerText;
+  let totalText=document.getElementById("total").innerText;
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
-    order_number: orderNum,
-    name: document.getElementById("name").value,
-    email: document.getElementById("email").value,
-    school: document.getElementById("school").value,
-    grade: document.getElementById("grade").value,
-    section: document.getElementById("section").value,
-    items: items.map((i,idx)=>`Item ${idx+1}: ${i.type} - ${i.design}`).join("\n"),
-    photos: photoLinks.join("\n"),
-    total: totalText
+    order_number:orderNum,
+    name:name.value,
+    email:email.value,
+    school:school.value,
+    grade:grade.value,
+    section:section.value,
+    items:items.join("\n"),
+    photos:photosText,
+    total:totalText
   })
   .then(()=>window.location.href="thankyou.html")
-  .catch(()=>alert("Failed to send"));
+  .catch(()=>{
+    alert("Failed");
+    btn.disabled=false;
+    btn.innerText="Submit Order";
+  });
 }
 
 addItem();
