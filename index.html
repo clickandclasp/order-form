@@ -19,21 +19,8 @@ font-family:'Averia Libre', cursive;
 background:#0f3550;
 color:white;
 }
-
-.container{
-max-width:420px;
-margin:auto;
-padding:20px;
-}
-
-h1{text-align:center;}
-
-.topbar{
-display:flex;
-justify-content:space-between;
-font-size:12px;
-margin-bottom:15px;
-}
+.container{max-width:420px;margin:auto;padding:20px;}
+.topbar{display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;}
 
 input, textarea{
 width:100%;
@@ -52,6 +39,7 @@ border-radius:12px;
 border:2px solid white;
 background:#0f3550;
 color:white;
+margin-bottom:10px;
 }
 
 button{
@@ -62,14 +50,10 @@ border:none;
 background:white;
 color:#0f3550;
 font-weight:bold;
-margin-top:10px;
 cursor:pointer;
-transition:.3s;
+transition:.25s;
 }
-
-button:hover{
-transform:scale(1.05);
-}
+button:hover{transform:scale(1.04);}
 
 .item{
 border:1px solid white;
@@ -78,68 +62,58 @@ margin-top:20px;
 border-radius:15px;
 }
 
-/* DESIGN ROW FIX */
 .designRow{
 display:flex;
-gap:14px;
+gap:12px;
 overflow-x:auto;
-margin:15px 0;
 padding-bottom:10px;
-scrollbar-width:none;
 }
-
-.designRow::-webkit-scrollbar{
-display:none;
-}
+.designRow::-webkit-scrollbar{display:none;}
 
 .design{
-width:70px;
+width:65px;
+opacity:.5;
 cursor:pointer;
-opacity:.6;
-transition:.3s;
+transition:.2s;
 }
-
 .design.active{
 opacity:1;
 transform:scale(1.1);
 }
 
-/* CREATE BUTTON FIX */
 .createBtn{
-min-width:70px;
-height:120px;
+min-width:65px;
+height:110px;
 border:2px dashed white;
 display:flex;
 align-items:center;
 justify-content:center;
-cursor:pointer;
-opacity:.6;
 font-size:11px;
 text-align:center;
-padding:5px;
+cursor:pointer;
+opacity:.5;
 }
-
 .createBtn.active{
 opacity:1;
 border:2px solid yellow;
-transform:scale(1.05);
 }
 
-/* PHOTO STRIP */
+.label{margin-top:15px;margin-bottom:8px;font-size:13px;}
+
 .strip{
 display:flex;
 flex-direction:column;
 gap:10px;
-margin-top:10px;
 }
 
 .slot{
-height:90px;
+height:85px;
 border:2px dashed white;
 display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
+font-size:12px;
 position:relative;
 }
 
@@ -151,26 +125,14 @@ object-fit:cover;
 
 .remove{
 position:absolute;
-top:3px;
-right:5px;
+top:4px;
+right:6px;
+font-size:12px;
 cursor:pointer;
 }
 
-.highlight{
-border-color:yellow;
-}
-
-.label{
+.multiUpload{
 margin-top:15px;
-font-size:13px;
-opacity:.8;
-}
-
-.inspoGrid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin-top:10px;
 }
 </style>
 </head>
@@ -179,14 +141,12 @@ margin-top:10px;
 
 <div class="container">
 
-<h1>ORDER FORM</h1>
+<h2>ORDER FORM</h2>
 
 <div class="topbar">
 <div>Date: <span id="date"></span></div>
 <div>Order #: <span id="orderNum"></span></div>
 </div>
-
-<h3>Customer Details</h3>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -208,16 +168,14 @@ margin-top:10px;
 let items=[];
 let orderNum=Math.floor(10000+Math.random()*90000);
 
-document.getElementById("date").innerText = new Date().toLocaleDateString();
-document.getElementById("orderNum").innerText = orderNum;
+document.getElementById("date").innerText=new Date().toLocaleDateString();
+document.getElementById("orderNum").innerText=orderNum;
 
 function addItem(){
 items.push({
 type:25,
 design:null,
-custom:"",
-photos:[null,null,null,null],
-inspo:[]
+photos:[null,null,null,null]
 });
 render();
 }
@@ -232,15 +190,11 @@ total+=item.type;
 html+=`
 <div class="item">
 
-<h4>Item ${i+1}</h4>
-
 <select onchange="changeType(${i},this.value)">
 <option value="25" ${item.type==25?"selected":""}>Plain (₱25)</option>
 <option value="30" ${item.type==30?"selected":""}>With Design (₱30)</option>
-<option value="35" ${item.type==35?"selected":""}>Custom Request (₱35)</option>
 </select>
 
-${item.type==30?`
 <div class="designRow">
 
 ${[1,2,3,4,5,6,7].map(d=>`
@@ -251,48 +205,31 @@ onclick="selectDesign(${i},${d})">
 
 <div class="createBtn ${item.design=="create"?"active":""}"
 onclick="selectDesign(${i},'create')">
-Create<br>Own Design
+Create Own Design
 </div>
 
 </div>
 
 ${item.design=="create"?`
-<div style="font-size:12px;margin-bottom:10px;">
-You will receive a Canva template after ordering. Please message your order# to our Social Media to request the template.
+<div style="font-size:12px;margin-top:10px;">
+You will receive a Canva template after ordering.  
+Please message your order# to our Social Media to request the template.
 </div>
 `:``}
 
-`:``}
-
-${item.type==35?`
-<textarea placeholder="Describe your design..."
-oninput="items[${i}].custom=this.value"></textarea>
-
-<button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
-
-<div class="inspoGrid">
-${item.inspo.map((p,pi)=>`
-<div class="slot">
-<img src="${p}">
-<div class="remove" onclick="removeInspo(${i},${pi})">✖</div>
-</div>
-`).join("")}
-</div>
-`:``}
-
-<div class="label">Photo Strip (4 Photos Required)</div>
+<div class="label">Photo Strip (4 Photos)</div>
 
 <div class="strip">
 ${item.photos.map((p,pi)=>`
-<div class="slot ${!p?'highlight':''}" onclick="upload(${i},${pi})">
-${p?`<img src="${p}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add Photo"}
+<div class="slot" onclick="upload(${i},${pi})">
+${p?`<img src="${URL.createObjectURL(p)}"><div class="remove" onclick="removePhoto(event,${i},${pi})">✖</div>`:"+ Add"}
 </div>
 `).join("")}
 </div>
 
-<button onclick="multiUpload(${i})" style="margin-top:15px;">
-Upload Multiple Photos
-</button>
+<div class="multiUpload">
+<button onclick="multiUpload(${i})">Upload Multiple Photos</button>
+</div>
 
 </div>
 `;
@@ -305,8 +242,6 @@ document.getElementById("total").innerText="Total: ₱"+total;
 function changeType(i,val){
 items[i].type=parseInt(val);
 items[i].design=null;
-items[i].custom="";
-items[i].inspo=[];
 render();
 }
 
@@ -318,15 +253,13 @@ render();
 function upload(i,pi){
 let input=document.createElement("input");
 input.type="file";
+input.accept="image/*";
 
 input.onchange=e=>{
-let reader=new FileReader();
-reader.onload=()=>{
-items[i].photos[pi]=reader.result;
+items[i].photos[pi]=e.target.files[0];
 render();
 };
-reader.readAsDataURL(e.target.files[0]);
-};
+
 input.click();
 }
 
@@ -337,37 +270,12 @@ input.multiple=true;
 
 input.onchange=e=>{
 let files=[...e.target.files];
-let index=0;
-
-files.forEach(file=>{
-let reader=new FileReader();
-reader.onload=()=>{
-while(index<4 && items[i].photos[index]) index++;
-if(index<4){
-items[i].photos[index]=reader.result;
-render();
+for(let j=0;j<4;j++){
+if(!items[i].photos[j] && files.length){
+items[i].photos[j]=files.shift();
 }
-};
-reader.readAsDataURL(file);
-});
-};
-input.click();
 }
-
-function uploadInspo(i){
-let input=document.createElement("input");
-input.type="file";
-input.multiple=true;
-
-input.onchange=e=>{
-[...e.target.files].forEach(file=>{
-let reader=new FileReader();
-reader.onload=()=>{
-items[i].inspo.push(reader.result);
 render();
-};
-reader.readAsDataURL(file);
-});
 };
 input.click();
 }
@@ -378,68 +286,76 @@ items[i].photos[pi]=null;
 render();
 }
 
-function removeInspo(i,pi){
-items[i].inspo.splice(pi,1);
-render();
+async function uploadToCloudinary(file){
+const url="https://api.cloudinary.com/v1_1/dacsw26s3/image/upload";
+
+const formData=new FormData();
+formData.append("file",file);
+formData.append("upload_preset","keychain_upload");
+
+const res=await fetch(url,{method:"POST",body:formData});
+const data=await res.json();
+return data.secure_url;
 }
 
-function submitOrder(){
+async function submitOrder(){
 
 let name=document.getElementById("name").value;
 let email=document.getElementById("email").value;
+let school=document.getElementById("school").value;
+let grade=document.getElementById("grade").value;
+let section=document.getElementById("section").value;
 
 if(!name||!email){
 alert("Fill required fields");
 return;
 }
 
-for(let item of items){
-if(item.photos.includes(null)){
+alert("Uploading photos... please wait ⏳");
+
+let itemsText="";
+let total=0;
+
+for(let i=0;i<items.length;i++){
+
+if(items[i].photos.includes(null)){
 alert("Each item needs 4 photos");
 return;
 }
-if(item.type==30 && !item.design){
-alert("Select a design");
-return;
+
+total+=items[i].type;
+
+itemsText+=`Item ${i+1} - ₱${items[i].type}\n`;
+
+for(let p of items[i].photos){
+let url=await uploadToCloudinary(p);
+itemsText+=url+"\n";
 }
-if(item.type==35 && !item.custom){
-alert("Describe your custom design");
-return;
-}
+
+itemsText+="\n";
 }
 
-let itemsText=items.map((it,i)=>
-`Item ${i+1} - ₱${it.type} (${it.design||"N/A"})`
-).join("\n");
-
-let attachments=[];
-
-items.forEach(it=>{
-attachments.push(...it.photos.filter(p=>p));
-attachments.push(...it.inspo);
-});
-
-emailjs.send(
-"service_wuyfomj",
-"template_wlwgyco",
-{
+let data={
 order_number:orderNum,
 date:new Date().toLocaleDateString(),
-name:document.getElementById("name").value,
-email:document.getElementById("email").value,
-school:document.getElementById("school").value,
-grade:document.getElementById("grade").value,
-section:document.getElementById("section").value,
+name:name,
+email:email,
+school:school,
+grade:grade,
+section:section,
 items:itemsText,
-total:items.reduce((t,i)=>t+i.type,0),
-attachments:attachments
-}
-)
+total:total
+};
+
+emailjs.send("service_wuyfomj","template_wlwgyco",data)
 .then(()=>{
-alert("Order sent! Order #"+orderNum);
+return emailjs.send("service_wuyfomj","template_wlm8hv4",data);
 })
-.catch(()=>{
-alert("Failed to send");
+.then(()=>{
+alert("Order sent successfully 💖");
+})
+.catch(err=>{
+alert("Error: "+JSON.stringify(err));
 });
 }
 
