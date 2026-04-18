@@ -28,14 +28,14 @@ input, select, textarea {
   margin:6px 0;
   border:none;
   border-radius:6px;
-  box-sizing:border-box; /* 🔥 THIS FIXES OVERFLOW */
+  box-sizing:border-box;
 }
 
-  textarea {
+textarea {
   resize:none;
   max-width:100%;
 }
-  
+
 .card{
   border:1px solid rgba(255,255,255,0.3);
   border-radius:12px;
@@ -43,40 +43,60 @@ input, select, textarea {
   margin-top:15px;
 }
 
-.designs{
+/* DESIGN ROW */
+.design-row{
   display:flex;
   gap:10px;
   overflow-x:auto;
   scrollbar-width:none;
 }
-.designs::-webkit-scrollbar{display:none;}
+.design-row::-webkit-scrollbar{ display:none; }
 
+.designs{
+  display:flex;
+  gap:10px;
+}
+
+/* DESIGN IMAGES */
 .designs img{
   width:55px;
+  border-radius:6px;
   cursor:pointer;
-  border-radius:8px;
   border:2px solid transparent;
-  transition:.2s;
+  transition:0.2s;
 }
-.designs img:hover{transform:scale(1.05);}
-.selected{border:2px solid yellow;}
 
+.designs img:hover{
+  transform:scale(1.05);
+}
+
+/* CREATE OWN BOX */
 .create-box{
-  min-width:70px;
-  height:100px;
+  min-width:80px;
+  height:110px;
+  border:2px dashed white;
+  border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  border:2px dashed white;
-  border-radius:12px;
   cursor:pointer;
-  font-size:12px;
+  font-size:14px;
+  text-align:center;
+  transition:0.2s;
 }
 
+/* 🔥 FIXED SELECT STYLE */
+.selected{
+  border:2px solid yellow !important;
+  box-shadow:0 0 10px yellow;
+  transform:scale(1.08);
+}
+
+/* UPLOAD */
 .upload-box{
   border:2px dashed white;
   padding:20px;
-  margin-top:10px;
+  margin-top:15px;
   border-radius:10px;
   cursor:pointer;
 }
@@ -88,45 +108,41 @@ input, select, textarea {
   flex-wrap:wrap;
 }
 
-.preview div{
-  position:relative;
-}
-
 .preview img{
   width:60px;
-  height:60px;
-  object-fit:cover;
   border-radius:6px;
 }
 
-.remove{
+/* REMOVE BUTTON */
+.preview div{
+  position:relative;
+}
+.preview div span{
   position:absolute;
-  top:-5px;
-  right:-5px;
+  top:0;
+  right:0;
   background:red;
   color:white;
-  border:none;
-  border-radius:50%;
-  width:18px;
-  height:18px;
-  cursor:pointer;
   font-size:12px;
+  padding:2px 5px;
+  cursor:pointer;
+  border-radius:50%;
+}
+
+.info-note{
+  font-size:13px;
+  margin-top:8px;
+  opacity:0.9;
 }
 
 button{
   width:100%;
   padding:12px;
-  margin-top:10px;
+  margin-top:15px;
   border:none;
   border-radius:10px;
   background:white;
   cursor:pointer;
-}
-
-.info-text{
-  font-size:13px;
-  opacity:.8;
-  margin-top:6px;
 }
 </style>
 </head>
@@ -158,240 +174,196 @@ button{
 <script>
 emailjs.init("tp0-EdHc-e3iYbotR");
 
-let items=[];
-let orderNum=Math.floor(Math.random()*90000)+10000;
+let orderNum = Math.floor(Math.random()*90000)+10000;
+document.getElementById("order").innerText = "Order #: " + orderNum;
+document.getElementById("date").innerText =
+"Date: " + new Date().toLocaleDateString();
 
-document.getElementById("date").innerText="Date: "+new Date().toLocaleDateString();
-document.getElementById("order").innerText="Order #: "+orderNum;
+let itemCount = 0;
 
 function addItem(){
-  let id=Date.now();
-  items.push({
-    id,
-    type:"plain",
-    design:null,
-    createOwn:false,
-    customText:"",
-    images:[],
-    inspo:[]
-  });
-  render();
-}
+  itemCount++;
 
-function render(){
-  let html="";
-  items.forEach((item,i)=>{
-    html+=`
-    <div class="card">
-    <h3>Item ${i+1}</h3>
+  let div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `
+    <h3>Item ${itemCount}</h3>
 
-    <select onchange="changeType(${item.id},this.value)">
-      <option value="plain" ${item.type=="plain"?"selected":""}>Plain (₱25)</option>
-      <option value="design" ${item.type=="design"?"selected":""}>With Design (₱30)</option>
-      <option value="custom" ${item.type=="custom"?"selected":""}>Custom (₱35)</option>
+    <select onchange="toggleSections(this)">
+      <option value="plain">Plain (₱25)</option>
+      <option value="design">With Design (₱30)</option>
+      <option value="custom">Custom (₱35)</option>
     </select>
 
-    ${item.type==="design"?`
-      <div class="designs">
-        ${[1,2,3,4,5].map(n=>`
-          <img src="design${n}.png"
-          class="${item.design===n?"selected":""}"
-          onclick="selectDesign(${item.id},${n})">
-        `).join("")}
+    <!-- DESIGN -->
+    <div class="designSection" style="display:none">
 
-        <div class="create-box ${item.createOwn?"selected":""}"
-        onclick="toggleCreateOwn(${item.id})">
-        Create Own
+      <div class="design-row">
+        <div class="designs">
+          ${[1,2,3,4,5,6,7].map(n=>`
+            <img src="design${n}.png" onclick="selectDesign(this)">
+          `).join("")}
+        </div>
+
+        <div class="create-box" onclick="selectCreateOwn(this)">
+          Create Own
         </div>
       </div>
 
-      ${item.createOwn?`
-      <div class="info-text">
-      Wait for Canva template after ordering 📩
+      <div class="info-note createNote" style="display:none;">
+        After ordering, wait for your Canva template link 💌
       </div>
-      `:""}
-
-      <div class="upload-box" onclick="triggerUpload(${item.id})">
-      Upload Photos (4 only)
-      </div>
-
-      <div class="preview">
-        ${item.images.map((img,idx)=>`
-          <div>
-            <img src="${img}">
-            <button class="remove" onclick="removeImg(${item.id},${idx})">×</button>
-          </div>
-        `).join("")}
-      </div>
-    `:""}
-
-    ${item.type==="custom"?`
-      <textarea placeholder="Custom Request..."
-      onchange="setCustomText(${item.id},this.value)">${item.customText}</textarea>
-
-      <div class="upload-box" onclick="triggerInspo(${item.id})">
-      Upload Inspo Photos (optional)
-      </div>
-
-      <div class="preview">
-        ${item.inspo.map((img,idx)=>`
-          <div>
-            <img src="${img}">
-            <button class="remove" onclick="removeInspo(${item.id},${idx})">×</button>
-          </div>
-        `).join("")}
-      </div>
-    `:""}
 
     </div>
-    `;
-  });
 
-  document.getElementById("items").innerHTML=html;
+    <!-- CUSTOM -->
+    <div class="customSection" style="display:none;">
+      <textarea placeholder="Custom Request..."></textarea>
+
+      <div class="upload-box" onclick="openFile(this)">
+        Upload Inspo Photos (optional)
+        <input type="file" multiple hidden onchange="handleUpload(this, 10)">
+      </div>
+
+      <div class="preview"></div>
+    </div>
+
+    <!-- MAIN UPLOAD -->
+    <div class="upload-box" onclick="openFile(this)">
+      Upload Photos (4 only)
+      <input type="file" multiple hidden onchange="handleUpload(this, 4)">
+    </div>
+
+    <div class="preview"></div>
+  `;
+
+  document.getElementById("items").appendChild(div);
   updateTotal();
 }
 
-function changeType(id,val){
-  let item=items.find(i=>i.id===id);
-  item.type=val;
-  render();
+function openFile(box){
+  box.querySelector("input").click();
 }
 
-function selectDesign(id,n){
-  let item=items.find(i=>i.id===id);
-  item.design=n;
-  item.createOwn=false;
-  render();
+function toggleSections(sel){
+  let card = sel.closest(".card");
+
+  card.querySelector(".designSection").style.display = "none";
+  card.querySelector(".customSection").style.display = "none";
+
+  if(sel.value === "design"){
+    card.querySelector(".designSection").style.display = "block";
+  }
+
+  if(sel.value === "custom"){
+    card.querySelector(".customSection").style.display = "block";
+  }
+
+  updateTotal();
 }
 
-function toggleCreateOwn(id){
-  let item=items.find(i=>i.id===id);
-  item.createOwn=!item.createOwn;
-  item.design=null;
-  render();
+/* 🔥 FIXED SELECTION */
+function selectDesign(img){
+  let card = img.closest(".card");
+
+  card.querySelectorAll(".designs img").forEach(i=>i.classList.remove("selected"));
+  card.querySelector(".create-box").classList.remove("selected");
+
+  img.classList.add("selected");
+  card.querySelector(".createNote").style.display = "none";
 }
 
-function setCustomText(id,value){
-  let item=items.find(i=>i.id===id);
-  item.customText=value;
+function selectCreateOwn(box){
+  let card = box.closest(".card");
+
+  card.querySelectorAll(".designs img").forEach(i=>i.classList.remove("selected"));
+  box.classList.add("selected");
+
+  card.querySelector(".createNote").style.display = "block";
 }
 
-/* MAIN IMAGE UPLOAD */
-function triggerUpload(id){
-  let input=document.createElement("input");
-  input.type="file";
-  input.multiple=true;
+/* UPLOAD */
+function handleUpload(input, limit){
+  const previewBox = input.parentElement.nextElementSibling;
 
-  input.onchange=e=>{
-    let files=[...e.target.files].slice(0,4);
+  let files = Array.from(input.files);
 
-    let item=items.find(i=>i.id===id);
-    item.images=[];
+  if(files.length > limit){
+    alert("Max " + limit + " files only!");
+    input.value = "";
+    return;
+  }
 
-    files.forEach(file=>{
-      let reader=new FileReader();
-      reader.onload=ev=>{
-        item.images.push(ev.target.result);
-        render();
-      };
-      reader.readAsDataURL(file);
-    });
-  };
+  previewBox.innerHTML = "";
 
-  input.click();
-}
+  files.forEach(file=>{
+    let wrapper = document.createElement("div");
 
-/* INSPO UPLOAD */
-function triggerInspo(id){
-  let input=document.createElement("input");
-  input.type="file";
-  input.multiple=true;
+    let img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
 
-  input.onchange=e=>{
-    let files=[...e.target.files];
+    let remove = document.createElement("span");
+    remove.innerText = "✕";
+    remove.onclick = () => wrapper.remove();
 
-    let item=items.find(i=>i.id===id);
-    item.inspo=[];
-
-    files.forEach(file=>{
-      let reader=new FileReader();
-      reader.onload=ev=>{
-        item.inspo.push(ev.target.result);
-        render();
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  input.click();
-}
-
-function removeImg(id,index){
-  let item=items.find(i=>i.id===id);
-  item.images.splice(index,1);
-  render();
-}
-
-function removeInspo(id,index){
-  let item=items.find(i=>i.id===id);
-  item.inspo.splice(index,1);
-  render();
+    wrapper.appendChild(img);
+    wrapper.appendChild(remove);
+    previewBox.appendChild(wrapper);
+  });
 }
 
 function updateTotal(){
-  let total=0;
-  items.forEach(i=>{
-    if(i.type==="plain") total+=25;
-    if(i.type==="design") total+=30;
-    if(i.type==="custom") total+=35;
+  let total = 0;
+
+  document.querySelectorAll(".card").forEach(card=>{
+    let val = card.querySelector("select").value;
+
+    if(val==="plain") total+=25;
+    if(val==="design") total+=30;
+    if(val==="custom") total+=35;
   });
-  document.getElementById("total").innerText="Total: ₱"+total;
+
+  document.getElementById("total").innerText = "Total: ₱"+total;
 }
 
-/* CLEAN EMAIL FORMAT */
 function submitOrder(){
 
-  let summary="";
-  let total=0;
+  let items = [];
 
-  items.forEach((item,i)=>{
-    let line=`Item ${i+1}: `;
+  document.querySelectorAll(".card").forEach(card=>{
+    let type = card.querySelector("select").value;
 
-    if(item.type==="plain"){
-      line+="Plain (₱25)";
-      total+=25;
-    }
+    let design = "None";
 
-    if(item.type==="design"){
-      total+=30;
+    if(type==="design"){
+      let selected = card.querySelector(".selected");
 
-      if(item.createOwn){
-        line+="Create Own Design (₱30)";
-      } else {
-        line+="Design "+(item.design || "Not selected")+" (₱30)";
+      if(selected && selected.classList.contains("create-box")){
+        design = "Create Own";
+      } 
+      else if(selected){
+        design = selected.src.split("/").pop();
       }
     }
 
-    if(item.type==="custom"){
-      total+=35;
-      line+="Custom (₱35)\nRequest: "+(item.customText || "None");
+    if(type==="custom"){
+      design = "Custom Request";
     }
 
-    summary+=line+"\n\n";
+    items.push({type,design});
   });
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
-    order_number:orderNum,
-    name:name.value,
-    email:email.value,
-    school:school.value,
-    grade:grade.value,
-    section:section.value,
-    items:summary,
-    total:"₱"+total
+    order_number: orderNum,
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    school: document.getElementById("school").value,
+    grade: document.getElementById("grade").value,
+    section: document.getElementById("section").value,
+    items: JSON.stringify(items)
   })
-  .then(()=>{window.location.href="thankyou.html";})
-  .catch(()=>{alert("Failed to send");});
+  .then(()=>window.location.href="thankyou.html")
+  .catch(()=>alert("Failed to send"));
 }
 
 addItem();
