@@ -43,12 +43,9 @@ input, select {
   gap:10px;
   align-items:center;
   overflow-x:auto;
-  padding-bottom:5px;
   scrollbar-width:none;
 }
-.design-row::-webkit-scrollbar {
-  display:none;
-}
+.design-row::-webkit-scrollbar { display:none; }
 
 .design-row img {
   width:60px;
@@ -57,29 +54,16 @@ input, select {
   border:2px solid transparent;
   transition:0.2s;
 }
+.design-row img:hover { transform:scale(1.05); }
+.selected { border:2px solid yellow !important; }
 
-.design-row img:hover {
-  transform:scale(1.05);
-}
-
-.selected {
-  border:2px solid yellow !important;
-  transform:scale(1.08);
-}
-
-/* CREATE OWN */
+/* CREATE */
 .create-btn {
   border:2px dashed white;
   padding:8px 12px;
   border-radius:10px;
   cursor:pointer;
   white-space:nowrap;
-  transition:0.2s;
-}
-
-.create-btn.active {
-  border-color:yellow;
-  color:yellow;
 }
 
 /* UPLOAD */
@@ -91,7 +75,6 @@ input, select {
   cursor:pointer;
 }
 
-/* BUTTON */
 button {
   width:100%;
   padding:12px;
@@ -109,7 +92,6 @@ textarea {
   border:none;
   margin-top:10px;
 }
-
 </style>
 </head>
 
@@ -153,8 +135,7 @@ const designNames = {
   4:"Blue Ocean",
   5:"Red Stripes",
   6:"Pink Pattern",
-  7:"Yellow Sun",
-  "custom":"Create Own"
+  7:"Yellow Sun"
 };
 
 function addItem(){
@@ -166,32 +147,32 @@ function addItem(){
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select onchange="toggleDesign(this, ${itemCount})">
+    <select onchange="toggleSections(this, ${itemCount})">
       <option value="plain">Plain (₱25)</option>
       <option value="design">With Design (₱30)</option>
+      <option value="custom">Custom (₱35)</option>
     </select>
 
+    <!-- DESIGN -->
     <div id="designBox${itemCount}" style="display:none">
-
       <div class="design-row">
         ${[1,2,3,4,5,6,7].map(i=>`
           <img src="design${i}.png" onclick="selectDesign(${itemCount}, ${i}, this)">
         `).join("")}
-
-        <div class="create-btn" onclick="selectCustom(${itemCount}, this)">
-          Create Own
-        </div>
       </div>
+    </div>
 
-      <textarea id="customText${itemCount}" placeholder="Custom Request..." style="display:none"></textarea>
+    <!-- CUSTOM -->
+    <div id="customBox${itemCount}" style="display:none">
+      <textarea id="customText${itemCount}" placeholder="Custom Request..."></textarea>
 
-      <div class="upload-box" onclick="document.getElementById('inspo${itemCount}').click()" style="display:none" id="inspoBox${itemCount}">
+      <div class="upload-box" onclick="document.getElementById('inspo${itemCount}').click()">
         Upload Inspo Photos (optional)
         <input type="file" id="inspo${itemCount}" multiple hidden>
       </div>
-
     </div>
 
+    <!-- PHOTOS -->
     <div class="upload-box" onclick="document.getElementById('file${itemCount}').click()">
       Upload Photos (4 only)
       <input type="file" id="file${itemCount}" multiple hidden>
@@ -202,13 +183,16 @@ function addItem(){
   updateTotal();
 }
 
-function toggleDesign(select, id){
-  let box = document.getElementById("designBox"+id);
+function toggleSections(select, id){
+  document.getElementById("designBox"+id).style.display="none";
+  document.getElementById("customBox"+id).style.display="none";
 
   if(select.value==="design"){
-    box.style.display="block";
-  } else {
-    box.style.display="none";
+    document.getElementById("designBox"+id).style.display="block";
+  }
+
+  if(select.value==="custom"){
+    document.getElementById("customBox"+id).style.display="block";
   }
 
   updateTotal();
@@ -216,30 +200,17 @@ function toggleDesign(select, id){
 
 function selectDesign(item, num, el){
   document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
-  document.querySelector(`#designBox${item} .create-btn`).classList.remove("active");
-
   el.classList.add("selected");
-
-  document.getElementById("customText"+item).style.display="none";
-  document.getElementById("inspoBox"+item).style.display="none";
-
   el.dataset.value = num;
-}
-
-function selectCustom(item, el){
-  document.querySelectorAll(`#designBox${item} img`).forEach(img=>img.classList.remove("selected"));
-  el.classList.add("active");
-
-  document.getElementById("customText"+item).style.display="block";
-  document.getElementById("inspoBox"+item).style.display="block";
-
-  el.dataset.value = "custom";
 }
 
 function updateTotal(){
   total = 0;
+
   document.querySelectorAll("#items select").forEach(sel=>{
-    total += sel.value==="plain" ? 25 : 30;
+    if(sel.value==="plain") total+=25;
+    if(sel.value==="design") total+=30;
+    if(sel.value==="custom") total+=35;
   });
 
   document.getElementById("total").innerText = "Total: ₱"+total;
@@ -252,6 +223,7 @@ async function submitOrder(){
   for(let i=1;i<=itemCount;i++){
 
     let files = document.getElementById("file"+i).files;
+
     if(files.length !== 4){
       alert(`Item ${i}: Upload exactly 4 photos`);
       return;
@@ -273,24 +245,26 @@ async function submitOrder(){
       uploaded.push(data.secure_url);
     }
 
+    let type = document.querySelectorAll("#items select")[i-1].value;
     let design = "None";
+    let customText = "";
 
-    let selectedImg = document.querySelector(`#designBox${i} img.selected`);
-    let customBtn = document.querySelector(`#designBox${i} .create-btn.active`);
-
-    if(selectedImg){
-      let index = Array.from(selectedImg.parentNode.children).indexOf(selectedImg)+1;
-      design = designNames[index];
+    if(type==="design"){
+      let selected = document.querySelector(`#designBox${i} img.selected`);
+      if(selected){
+        let index = Array.from(selected.parentNode.children).indexOf(selected)+1;
+        design = designNames[index];
+      }
     }
 
-    if(customBtn){
+    if(type==="custom"){
       design = "Create Own";
+      customText = document.getElementById("customText"+i).value;
     }
-
-    let customText = document.getElementById("customText"+i)?.value || "";
 
     allData += `
 Item ${i}
+Type: ${type}
 Design: ${design}
 Custom: ${customText}
 Photos:
@@ -317,7 +291,7 @@ ${uploaded.join("\n")}
   });
 }
 
-// start with 1 item
+// start
 addItem();
 </script>
 
