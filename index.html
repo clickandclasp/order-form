@@ -1,366 +1,169 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Form</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Averia+Libre:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-<script>
-emailjs.init("tp0-EdHc-e3iYbotR");
-</script>
+  <style>
+    body {
+      background: #0e2a3b;
+      color: white;
+      font-family: sans-serif;
+      padding: 20px;
+    }
 
-<style>
-body{
-margin:0;
-font-family:'Averia Libre', cursive;
-background:#0f3550;
-color:white;
-}
+    .keychain {
+      width: 70px;
+      cursor: pointer;
+      margin: 5px;
+      border-radius: 10px;
+      transition: 0.2s;
+    }
 
-.container{max-width:420px;margin:auto;padding:20px;}
+    .selected {
+      box-shadow: 0 0 10px #00eaff;
+      transform: scale(1.05);
+    }
 
-input, select{
-width:100%;
-background:transparent;
-border:none;
-border-bottom:2px solid white;
-color:white;
-padding:8px;
-margin-bottom:15px;
-}
+    .box {
+      border: 2px dashed white;
+      padding: 20px;
+      margin: 10px 0;
+      text-align: center;
+      cursor: pointer;
+    }
 
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:10px;
-background:white;
-color:#0f3550;
-font-weight:bold;
-cursor:pointer;
-margin-top:12px;
-}
-
-.item{
-border:1px solid white;
-padding:15px;
-margin-top:20px;
-border-radius:12px;
-}
-
-.row{
-display:flex;
-gap:10px;
-overflow-x:auto;
-padding-bottom:10px;
-}
-
-.design{
-width:70px;
-cursor:pointer;
-opacity:0.6;
-}
-.design.active{
-opacity:1;
-transform:scale(1.1);
-}
-
-.create-btn{
-border:2px dashed white;
-padding:20px;
-min-width:100px;
-text-align:center;
-cursor:pointer;
-}
-.create-btn.active{
-border-color:yellow;
-}
-
-.photos{
-display:flex;
-flex-direction:column;
-gap:10px;
-margin-top:10px;
-}
-
-.slot{
-border:2px dashed white;
-height:70px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-}
-
-.slot img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-</style>
+    button {
+      padding: 12px;
+      margin-top: 20px;
+      width: 100%;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
+<h2>ORDER FORM</h2>
 
-<h1>ORDER FORM</h1>
-<p>Date: <span id="date"></span></p>
-<p>Order #: <span id="order"></span></p>
+<input id="name" placeholder="Name"><br><br>
+<input id="email" placeholder="Email"><br><br>
 
-<input id="name" placeholder="Name">
-<input id="email" placeholder="Email">
-<input id="school" placeholder="School">
-<input id="grade" placeholder="Grade">
-<input id="section" placeholder="Section">
+<select id="type">
+  <option value="plain">Plain</option>
+  <option value="design">With Design</option>
+  <option value="custom">Custom</option>
+</select>
 
-<div id="items"></div>
+<h3>Select Design</h3>
 
-<button onclick="addItem()">+ Add Keychain</button>
+<div id="designs">
+  <img src="1.png" class="keychain" data-design="1" onclick="selectDesign(1)">
+  <img src="2.png" class="keychain" data-design="2" onclick="selectDesign(2)">
+  <img src="3.png" class="keychain" data-design="3" onclick="selectDesign(3)">
+  <img src="4.png" class="keychain" data-design="4" onclick="selectDesign(4)">
+  <img src="5.png" class="keychain" data-design="5" onclick="selectDesign(5)">
+  <img src="6.png" class="keychain" data-design="6" onclick="selectDesign(6)">
+  <img src="7.png" class="keychain" data-design="7" onclick="selectDesign(7)">
+  
+  <button onclick="selectDesign('create')">Create Own Design</button>
+</div>
 
-<h3 id="total">Total: ₱0</h3>
+<h3>Photo Strip (4 Photos)</h3>
+
+<div class="box" onclick="document.getElementById('photos').click()">
+  Click to Upload Photos
+</div>
+
+<input type="file" id="photos" multiple hidden>
+
+<br>
 
 <button onclick="submitOrder()">Submit Order</button>
 
-</div>
-
 <script>
-let items=[];
-let orderNum=Math.floor(10000+Math.random()*90000);
-
-document.getElementById("order").innerText=orderNum;
-document.getElementById("date").innerText=new Date().toLocaleDateString();
-
-function addItem(){
-items.push({
-type:"plain",
-design:null,
-create:false,
-custom:"",
-photos:[null,null,null,null],
-inspo:[]
-});
-render();
-}
-
-function render(){
-let html="";
-let total=0;
-
-items.forEach((item,i)=>{
-
-if(item.type=="plain") total+=25;
-if(item.type=="design") total+=30;
-if(item.type=="custom") total+=35;
-
-html+=`
-<div class="item">
-
-<select onchange="changeType(${i},this.value)">
-<option value="plain" ${item.type=="plain"?"selected":""}>Plain (₱25)</option>
-<option value="design" ${item.type=="design"?"selected":""}>With Design (₱30)</option>
-<option value="custom" ${item.type=="custom"?"selected":""}>Custom (₱35)</option>
-</select>
-
-${item.type=="design"?`
-<div class="row">
-${[1,2,3,4,5,6,7].map(d=>`
-<img src="design${d}.png"
-class="design ${item.design==d?"active":""}"
-onclick="selectDesign(${i},${d})">
-`).join("")}
-
-<div class="create-btn ${item.create?"active":""}" onclick="selectCreate(${i})">
-Create Own Design
-</div>
-</div>
-
-<p style="margin-top:10px;">
-You will receive a Canva template after ordering.<br>
-Please message your order# to our Social Media to request the template.
-</p>
-`:``}
-
-${item.type=="custom"?`
-<input placeholder="Describe your design..."
-oninput="items[${i}].custom=this.value">
-
-<button onclick="uploadInspo(${i})">+ Add Inspo Photos</button>
-`:``}
-
-<p style="margin-top:15px;">Photo Strip (4 Photos)</p>
-
-<div class="photos">
-${item.photos.map((p,pi)=>`
-<div class="slot" onclick="upload(${i},${pi})">
-${p?`<img src="${p}">`:"+ Add"}
-</div>
-`).join("")}
-</div>
-
-<button onclick="uploadMultiple(${i})" style="margin-top:15px;">
-Upload Multiple Photos
-</button>
-
-</div>
-`;
-});
-
-document.getElementById("items").innerHTML=html;
-document.getElementById("total").innerText="Total: ₱"+total;
-}
-
-function changeType(i,val){
-items[i].type=val;
-items[i].design=null;
-items[i].create=false;
-render();
-}
-
-function selectDesign(i,d){
-items[i].design=d;
-items[i].create=false;
-render();
-}
-
-function selectCreate(i){
-items[i].create=true;
-items[i].design=null;
-render();
-}
+emailjs.init("tp0-EdHc-e3iYbotR");
 
 // CLOUDINARY
+const CLOUD_NAME = "dacsw26s3";
+const UPLOAD_PRESET = "keychain_upload";
+
+// DESIGN NAMES
+const designNames = {
+  1: "Film Strip",
+  2: "Gwen Stacey",
+  3: "Miles Morales",
+  4: "Blue Ocean",
+  5: "Red Stripes",
+  6: "Pink Pattern",
+  7: "Yellow Sun",
+  "create": "Create Own"
+};
+
+let selectedDesign = null;
+
+function selectDesign(index) {
+  selectedDesign = index;
+
+  document.querySelectorAll(".keychain").forEach(el => {
+    el.classList.remove("selected");
+  });
+
+  if(index !== "create"){
+    document.querySelector(`[data-design="${index}"]`).classList.add("selected");
+  }
+}
+
+// UPLOAD TO CLOUDINARY
 async function uploadToCloudinary(file){
-let url="https://api.cloudinary.com/v1_1/dacsw26s3/image/upload";
-let fd=new FormData();
-fd.append("file",file);
-fd.append("upload_preset","keychain_upload");
+  let formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
 
-let res=await fetch(url,{method:"POST",body:fd});
-let data=await res.json();
-return data.secure_url;
+  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  let data = await res.json();
+  return data.secure_url;
 }
 
-function upload(i,pi){
-let input=document.createElement("input");
-input.type="file";
+async function submitOrder(){
 
-input.onchange=async e=>{
-let file=e.target.files[0];
-let url=await uploadToCloudinary(file);
-items[i].photos[pi]=url;
-render();
-};
+  let files = document.getElementById("photos").files;
+  let links = [];
 
-input.click();
-}
+  for(let file of files){
+    let url = await uploadToCloudinary(file);
+    links.push(url);
+  }
 
-function uploadMultiple(i){
-let input=document.createElement("input");
-input.type="file";
-input.multiple=true;
+  let photoText = links.map((l,i)=>`Photo ${i+1}: ${l}`).join("\n");
 
-input.onchange=async e=>{
-let files=[...e.target.files];
-for(let f of files){
-let idx=items[i].photos.findIndex(p=>p==null);
-if(idx==-1) break;
-let url=await uploadToCloudinary(f);
-items[i].photos[idx]=url;
-}
-render();
-};
+  let templateParams = {
+    name: document.getElementById("name").value,
+    email: document.getElementById("email").value,
+    order_number: Math.floor(Math.random()*100000),
+    items: `1 item`,
+    links: `Design: ${designNames[selectedDesign]}\n${photoText}`,
+    total: "₱30"
+  };
 
-input.click();
-}
-
-function uploadInspo(i){
-let input=document.createElement("input");
-input.type="file";
-input.multiple=true;
-
-input.onchange=async e=>{
-let files=[...e.target.files];
-for(let f of files){
-let url=await uploadToCloudinary(f);
-items[i].inspo.push(url);
-}
-alert("Inspo photos uploaded!");
-};
-
-input.click();
-}
-
-function submitOrder(){
-
-let name=document.getElementById("name").value;
-let email=document.getElementById("email").value;
-
-if(!name||!email){
-alert("Fill required fields");
-return;
-}
-
-let itemsText="";
-let links="";
-let total=0;
-
-try{
-
-items.forEach((item,i)=>{
-
-if(item.photos.includes(null)){
-throw "Complete all 4 photos";
-}
-
-if(item.type=="design" && !item.design && !item.create){
-throw "Select design or Create Own Design";
-}
-
-if(item.type=="custom" && !item.custom){
-throw "Describe your custom design";
-}
-
-if(item.type=="plain") total+=25;
-if(item.type=="design") total+=30;
-if(item.type=="custom") total+=35;
-
-itemsText+=`Item ${i+1} - ${item.type}\n`;
-
-item.photos.forEach((p,pi)=>{
-links+=`Item ${i+1} Photo ${pi+1}: ${p}\n`;
-});
-
-item.inspo.forEach((p,pi)=>{
-links+=`Item ${i+1} Inspo ${pi+1}: ${p}\n`;
-});
-
-});
-
-}catch(err){
-alert(err);
-return;
-}
-
-emailjs.send("service_wuyfomj","template_wlwgyco",{
-order_number:orderNum,
-date:new Date().toLocaleDateString(),
-name:name,
-email:email,
-school:document.getElementById("school").value,
-grade:document.getElementById("grade").value,
-section:document.getElementById("section").value,
-items:itemsText,
-links:links,
-total:total
-})
-.then(()=>{
-window.location.href="thankyou.html";
-})
-.catch(()=>{
-window.location.href="thankyou.html";
-});
+  emailjs.send("service_wuyfomj","template_wlwgyco",templateParams)
+  .then(()=>{
+    alert("Order Sent!");
+    window.location.href = "thankyou.html";
+  })
+  .catch(err=>{
+    alert("Failed to send");
+    console.log(err);
+  });
 
 }
 </script>
