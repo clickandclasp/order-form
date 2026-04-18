@@ -31,10 +31,7 @@ input, select, textarea {
   box-sizing:border-box;
 }
 
-textarea {
-  resize:none;
-  max-width:100%;
-}
+textarea{ resize:none; }
 
 .card{
   border:1px solid rgba(255,255,255,0.3);
@@ -43,7 +40,6 @@ textarea {
   margin-top:15px;
 }
 
-/* DESIGN ROW */
 .design-row{
   display:flex;
   gap:10px;
@@ -57,20 +53,19 @@ textarea {
   gap:10px;
 }
 
-/* DESIGN IMAGES */
 .designs img{
   width:55px;
   border-radius:6px;
   cursor:pointer;
   border:2px solid transparent;
-  transition:0.2s;
 }
 
-.designs img:hover{
-  transform:scale(1.05);
+.designs img.selected,
+.create-box.selected{
+  border:2px solid #a3ff12;
+  box-shadow:0 0 6px rgba(163,255,18,0.6);
 }
 
-/* CREATE OWN BOX */
 .create-box{
   min-width:80px;
   height:110px;
@@ -80,22 +75,13 @@ textarea {
   align-items:center;
   justify-content:center;
   cursor:pointer;
-  font-size:14px;
+  font-size:13px;
   text-align:center;
-  transition:0.2s;
 }
 
-/* 🔥 FIXED SELECT STYLE */
-.selected{
-  border:2px solid yellow !important;
-  box-shadow:0 0 10px yellow;
-  transform:scale(1.08);
-}
-
-/* UPLOAD */
 .upload-box{
   border:2px dashed white;
-  padding:20px;
+  padding:15px;
   margin-top:15px;
   border-radius:10px;
   cursor:pointer;
@@ -111,28 +97,12 @@ textarea {
 .preview img{
   width:60px;
   border-radius:6px;
-}
-
-/* REMOVE BUTTON */
-.preview div{
-  position:relative;
-}
-.preview div span{
-  position:absolute;
-  top:0;
-  right:0;
-  background:red;
-  color:white;
-  font-size:12px;
-  padding:2px 5px;
   cursor:pointer;
-  border-radius:50%;
 }
 
 .info-note{
   font-size:13px;
   margin-top:8px;
-  opacity:0.9;
 }
 
 button{
@@ -143,6 +113,11 @@ button{
   border-radius:10px;
   background:white;
   cursor:pointer;
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
 }
 </style>
 </head>
@@ -167,12 +142,16 @@ button{
 
 <h3 id="total">Total: ₱0</h3>
 
-<button onclick="submitOrder()">Submit Order</button>
+<button id="submitBtn" onclick="submitOrder()">Submit Order</button>
 
 </div>
 
 <script>
 emailjs.init("tp0-EdHc-e3iYbotR");
+
+// ✅ YOUR REAL CLOUDINARY KEYS
+let CLOUD_NAME = "dacsw26s3";
+let UPLOAD_PRESET = "keychain_upload";
 
 let orderNum = Math.floor(Math.random()*90000)+10000;
 document.getElementById("order").innerText = "Order #: " + orderNum;
@@ -180,6 +159,7 @@ document.getElementById("date").innerText =
 "Date: " + new Date().toLocaleDateString();
 
 let itemCount = 0;
+let dragged = null;
 
 function addItem(){
   itemCount++;
@@ -195,9 +175,7 @@ function addItem(){
       <option value="custom">Custom (₱35)</option>
     </select>
 
-    <!-- DESIGN -->
     <div class="designSection" style="display:none">
-
       <div class="design-row">
         <div class="designs">
           ${[1,2,3,4,5,6,7].map(n=>`
@@ -211,27 +189,24 @@ function addItem(){
       </div>
 
       <div class="info-note createNote" style="display:none;">
-        After ordering, wait for your Canva template link 💌
+        You will receive a Canva template after ordering. Please message your order# to our Social Media to request the template.
       </div>
-
     </div>
 
-    <!-- CUSTOM -->
     <div class="customSection" style="display:none;">
       <textarea placeholder="Custom Request..."></textarea>
 
       <div class="upload-box" onclick="openFile(this)">
         Upload Inspo Photos (optional)
-        <input type="file" multiple hidden onchange="handleUpload(this, 10)">
+        <input type="file" multiple hidden onchange="handleFiles(this,false)">
       </div>
 
       <div class="preview"></div>
     </div>
 
-    <!-- MAIN UPLOAD -->
-    <div class="upload-box" onclick="openFile(this)">
-      Upload Photos (4 only)
-      <input type="file" multiple hidden onchange="handleUpload(this, 4)">
+    <div class="upload-box mainUpload" onclick="openFile(this)">
+      Upload Photos for Photo Strip (4 required)
+      <input type="file" multiple hidden onchange="handleFiles(this,true)">
     </div>
 
     <div class="preview"></div>
@@ -248,21 +223,20 @@ function openFile(box){
 function toggleSections(sel){
   let card = sel.closest(".card");
 
-  card.querySelector(".designSection").style.display = "none";
-  card.querySelector(".customSection").style.display = "none";
+  card.querySelector(".designSection").style.display="none";
+  card.querySelector(".customSection").style.display="none";
 
-  if(sel.value === "design"){
-    card.querySelector(".designSection").style.display = "block";
+  if(sel.value==="design"){
+    card.querySelector(".designSection").style.display="block";
   }
-
-  if(sel.value === "custom"){
-    card.querySelector(".customSection").style.display = "block";
+  if(sel.value==="custom"){
+    card.querySelector(".customSection").style.display="block";
   }
 
   updateTotal();
+  validateSubmit();
 }
 
-/* 🔥 FIXED SELECTION */
 function selectDesign(img){
   let card = img.closest(".card");
 
@@ -270,7 +244,7 @@ function selectDesign(img){
   card.querySelector(".create-box").classList.remove("selected");
 
   img.classList.add("selected");
-  card.querySelector(".createNote").style.display = "none";
+  card.querySelector(".createNote").style.display="none";
 }
 
 function selectCreateOwn(box){
@@ -279,79 +253,134 @@ function selectCreateOwn(box){
   card.querySelectorAll(".designs img").forEach(i=>i.classList.remove("selected"));
   box.classList.add("selected");
 
-  card.querySelector(".createNote").style.display = "block";
+  card.querySelector(".createNote").style.display="block";
 }
 
-/* UPLOAD */
-function handleUpload(input, limit){
-  const previewBox = input.parentElement.nextElementSibling;
+function handleFiles(input,isMain){
+  let previewBox = input.parentElement.nextElementSibling;
+  let files = [...input.files];
 
-  let files = Array.from(input.files);
+  if(isMain) files = files.slice(0,4);
 
-  if(files.length > limit){
-    alert("Max " + limit + " files only!");
-    input.value = "";
-    return;
-  }
-
-  previewBox.innerHTML = "";
+  previewBox.innerHTML="";
 
   files.forEach(file=>{
     let wrapper = document.createElement("div");
 
     let img = document.createElement("img");
     img.src = URL.createObjectURL(file);
+    img.draggable = true;
 
-    let remove = document.createElement("span");
-    remove.innerText = "✕";
-    remove.onclick = () => wrapper.remove();
+    img.ondragstart = ()=> dragged = wrapper;
+    img.ondrop = ()=> previewBox.insertBefore(dragged, wrapper);
+    img.ondragover = e=>e.preventDefault();
 
+    img.onclick = ()=>{
+      let newInput = document.createElement("input");
+      newInput.type="file";
+      newInput.onchange=e=>{
+        let newFile = e.target.files[0];
+        img.src = URL.createObjectURL(newFile);
+        wrapper.file = newFile;
+      };
+      newInput.click();
+    };
+
+    wrapper.file = file;
     wrapper.appendChild(img);
-    wrapper.appendChild(remove);
     previewBox.appendChild(wrapper);
   });
+
+  validateSubmit();
 }
 
 function updateTotal(){
-  let total = 0;
+  let total=0;
 
   document.querySelectorAll(".card").forEach(card=>{
     let val = card.querySelector("select").value;
-
     if(val==="plain") total+=25;
     if(val==="design") total+=30;
     if(val==="custom") total+=35;
   });
 
-  document.getElementById("total").innerText = "Total: ₱"+total;
+  document.getElementById("total").innerText="Total: ₱"+total;
 }
 
-function submitOrder(){
-
-  let items = [];
+function validateSubmit(){
+  let valid = true;
 
   document.querySelectorAll(".card").forEach(card=>{
     let type = card.querySelector("select").value;
+    let photos = card.querySelector(".mainUpload + .preview");
 
-    let design = "None";
+    if(type==="plain" || type==="design"){
+      if(photos.children.length < 4){
+        valid = false;
+      }
+    }
+  });
+
+  document.getElementById("submitBtn").disabled = !valid;
+}
+
+async function uploadToCloudinary(file){
+  let formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  let res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,{
+    method:"POST",
+    body:formData
+  });
+
+  let data = await res.json();
+
+  if(!data.secure_url){
+    alert("Upload failed");
+    throw new Error("Cloudinary error");
+  }
+
+  return data.secure_url;
+}
+
+async function submitOrder(){
+
+  let items = [];
+  let photoLinks = [];
+
+  for(let card of document.querySelectorAll(".card")){
+    let type = card.querySelector("select").value;
+    let design="None";
 
     if(type==="design"){
       let selected = card.querySelector(".selected");
-
-      if(selected && selected.classList.contains("create-box")){
-        design = "Create Own";
-      } 
-      else if(selected){
-        design = selected.src.split("/").pop();
+      if(selected?.classList.contains("create-box")){
+        design="Create Own";
+      } else if(selected){
+        design=selected.src.split("/").pop();
       }
     }
 
     if(type==="custom"){
-      design = "Custom Request";
+      design = card.querySelector("textarea").value || "Custom Request";
     }
 
     items.push({type,design});
-  });
+
+    let photos = card.querySelector(".mainUpload + .preview");
+
+    for(let p of photos.children){
+      let url = await uploadToCloudinary(p.file);
+      photoLinks.push(url);
+    }
+  }
+
+  let itemText = items.map((i,idx)=>
+    `Item ${idx+1}: ${i.type.toUpperCase()} - ${i.design}`
+  ).join("\n");
+
+  let photoText = photoLinks.join("\n");
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
@@ -360,7 +389,8 @@ function submitOrder(){
     school: document.getElementById("school").value,
     grade: document.getElementById("grade").value,
     section: document.getElementById("section").value,
-    items: JSON.stringify(items)
+    items: itemText,
+    photos: photoText
   })
   .then(()=>window.location.href="thankyou.html")
   .catch(()=>alert("Failed to send"));
