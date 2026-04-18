@@ -22,15 +22,6 @@ body {
   text-align:center;
 }
 
-h1 {
-  margin-bottom:5px;
-}
-
-.info {
-  font-size:14px;
-  margin-bottom:15px;
-}
-
 input, select {
   width:100%;
   padding:10px;
@@ -46,23 +37,17 @@ input, select {
   margin-top:15px;
 }
 
-.design-row {
-  display:flex;
-  align-items:center;
-  gap:15px;
-  margin-top:10px;
-}
-
 .designs {
   display:flex;
   gap:10px;
-  overflow-x:auto;
-  max-width:230px;
+  margin-top:10px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
 .designs img {
-  width:50px;
-  border-radius:6px;
+  width:60px;
+  border-radius:8px;
   cursor:pointer;
   border:2px solid transparent;
 }
@@ -76,13 +61,12 @@ input, select {
   padding:10px;
   border-radius:10px;
   cursor:pointer;
-  min-width:130px;
-  text-align:center;
+  margin-top:10px;
 }
 
 .upload-box {
   border:2px dashed white;
-  padding:30px;
+  padding:25px;
   margin-top:15px;
   border-radius:10px;
   cursor:pointer;
@@ -91,11 +75,23 @@ input, select {
 button {
   width:100%;
   padding:12px;
-  margin-top:15px;
+  margin-top:10px;
   border:none;
   border-radius:10px;
   background:white;
   cursor:pointer;
+}
+
+.item {
+  border:1px solid rgba(255,255,255,0.2);
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+.total {
+  margin-top:15px;
+  font-size:18px;
 }
 </style>
 </head>
@@ -105,9 +101,8 @@ button {
 <div class="container">
 
 <h1>ORDER FORM</h1>
-
-<div class="info" id="date"></div>
-<div class="info" id="order"></div>
+<div id="date"></div>
+<div id="order"></div>
 
 <input id="name" placeholder="Name">
 <input id="email" placeholder="Email">
@@ -115,98 +110,77 @@ button {
 <input id="grade" placeholder="Grade">
 <input id="section" placeholder="Section">
 
-<div class="card">
+<div id="items"></div>
 
-<select id="type">
-  <option value="plain">Plain (₱25)</option>
-  <option value="design">With Design (₱30)</option>
-</select>
+<button onclick="addItem()">+ Add Keychain</button>
 
-<!-- DESIGN SECTION -->
-<div id="designSection" style="display:none;">
-
-  <div class="design-row">
-
-    <div class="designs">
-      <img src="design1.png" onclick="selectDesign(1)">
-      <img src="design2.png" onclick="selectDesign(2)">
-      <img src="design3.png" onclick="selectDesign(3)">
-      <img src="design4.png" onclick="selectDesign(4)">
-      <img src="design5.png" onclick="selectDesign(5)">
-      <img src="design6.png" onclick="selectDesign(6)">
-      <img src="design7.png" onclick="selectDesign(7)">
-    </div>
-
-    <div class="create-btn" onclick="selectDesign('custom')">
-      Create Own Design
-    </div>
-
-  </div>
-
-</div>
-
-<div class="upload-box" onclick="fileInput.click()">
-  Click to Upload Photos
-  <input type="file" id="fileInput" multiple hidden>
-</div>
+<div class="total" id="total">Total: ₱0</div>
 
 <button onclick="submitOrder()">Submit Order</button>
 
-</div>
 </div>
 
 <script>
 emailjs.init("tp0-EdHc-e3iYbotR");
 
-let selectedDesign = "none";
-
-// SELECT DESIGN
-function selectDesign(d){
-  selectedDesign = d;
-
-  document.querySelectorAll(".designs img").forEach(img=>{
-    img.classList.remove("selected");
-  });
-
-  if(typeof d === "number"){
-    document.querySelectorAll(".designs img")[d-1].classList.add("selected");
-  }
-}
-
-// SHOW DESIGN ONLY IF NEEDED
-document.getElementById("type").addEventListener("change",()=>{
-  let val = document.getElementById("type").value;
-  document.getElementById("designSection").style.display =
-    val === "design" ? "block" : "none";
-});
-
-// DATE + ORDER #
-let today = new Date();
-document.getElementById("date").innerText = "Date: " + today.toLocaleDateString();
 let orderNum = Math.floor(Math.random()*90000)+10000;
 document.getElementById("order").innerText = "Order #: " + orderNum;
+document.getElementById("date").innerText =
+  "Date: " + new Date().toLocaleDateString();
 
-// SUBMIT
-async function submitOrder(){
+let itemCount = 0;
+let items = [];
 
-  let files = document.getElementById("fileInput").files;
-  let uploaded = [];
+function addItem(){
+  itemCount++;
 
-  for(let file of files){
-    let formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "keychain_upload");
+  let div = document.createElement("div");
+  div.className = "item";
+  div.id = "item"+itemCount;
 
-    let res = await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
-      method:"POST",
-      body:formData
-    });
+  div.innerHTML = `
+    <h3>Item ${itemCount}</h3>
 
-    let data = await res.json();
-    uploaded.push(data.secure_url);
+    <select onchange="updateTotal()" id="type${itemCount}">
+      <option value="25">Plain (₱25)</option>
+      <option value="30">With Design (₱30)</option>
+    </select>
+
+    <div class="designs" id="designs${itemCount}">
+      ${[1,2,3,4,5,6,7].map(i =>
+        `<img src="design${i}.png" onclick="selectDesign(${itemCount},${i})">`
+      ).join("")}
+    </div>
+
+    <div class="create-btn" onclick="selectDesign(${itemCount},'custom')">
+      Create Own Design
+    </div>
+
+    <div class="upload-box" onclick="document.getElementById('file${itemCount}').click()">
+      Upload Photos
+      <input type="file" id="file${itemCount}" multiple hidden>
+    </div>
+  `;
+
+  document.getElementById("items").appendChild(div);
+
+  items.push({
+    design: "None",
+    price:25
+  });
+
+  updateTotal();
+}
+
+function selectDesign(item, design){
+  let imgs = document.querySelectorAll(`#designs${item} img`);
+  imgs.forEach(i=>i.classList.remove("selected"));
+
+  if(typeof design === "number"){
+    imgs[design-1].classList.add("selected");
   }
 
-  let designNames = {
+  let names = {
     1:"Film Strip",
     2:"Gwen Stacey",
     3:"Miles Morales",
@@ -217,7 +191,46 @@ async function submitOrder(){
     "custom":"Create Own"
   };
 
-  let chosenDesign = designNames[selectedDesign] || "None";
+  items[item-1].design = names[design];
+}
+
+function updateTotal(){
+  let total = 0;
+
+  for(let i=1;i<=itemCount;i++){
+    let val = parseInt(document.getElementById("type"+i).value);
+    items[i-1].price = val;
+    total += val;
+  }
+
+  document.getElementById("total").innerText = "Total: ₱" + total;
+}
+
+async function submitOrder(){
+
+  let allLinks = "";
+
+  for(let i=1;i<=itemCount;i++){
+
+    let files = document.getElementById("file"+i).files;
+    let links = [];
+
+    for(let file of files){
+      let fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", "keychain_upload");
+
+      let res = await fetch("https://api.cloudinary.com/v1_1/dacsw26s3/image/upload",{
+        method:"POST",
+        body:fd
+      });
+
+      let data = await res.json();
+      links.push(data.secure_url);
+    }
+
+    allLinks += `Item ${i} (${items[i-1].design}):\n` + links.join("\n") + "\n\n";
+  }
 
   emailjs.send("service_wuyfomj","template_wlwgyco",{
     order_number: orderNum,
@@ -226,8 +239,8 @@ async function submitOrder(){
     school: document.getElementById("school").value,
     grade: document.getElementById("grade").value,
     section: document.getElementById("section").value,
-    design: chosenDesign,
-    links: uploaded.join("\n")
+    links: allLinks,
+    total: document.getElementById("total").innerText
   })
   .then(()=>{
     window.location.href = "thankyou.html";
@@ -235,8 +248,10 @@ async function submitOrder(){
   .catch(()=>{
     alert("Failed to send");
   });
-
 }
+
+// START WITH ONE ITEM
+addItem();
 </script>
 
 </body>
