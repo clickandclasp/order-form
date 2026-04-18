@@ -37,39 +37,74 @@ input, select {
   margin-top:15px;
 }
 
+.item {
+  margin-top:15px;
+  border:1px solid rgba(255,255,255,0.2);
+  padding:12px;
+  border-radius:10px;
+}
+
+/* DESIGN ROW */
+.design-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+/* KEYCHAINS */
 .designs {
   display:flex;
   gap:10px;
-  margin-top:10px;
-  flex-wrap:wrap;
-  justify-content:center;
 }
 
 .designs img {
-  width:60px;
-  border-radius:8px;
+  width:55px;
   cursor:pointer;
+  border-radius:8px;
   border:2px solid transparent;
+  transition:0.2s;
+}
+
+.designs img:hover {
+  transform:scale(1.1);
 }
 
 .designs img.selected {
   border:2px solid yellow;
+  transform:scale(1.1);
 }
 
+/* CREATE OWN BUTTON */
 .create-btn {
   border:2px dashed white;
-  padding:10px;
+  padding:8px 10px;
   border-radius:10px;
   cursor:pointer;
-  margin-top:10px;
+  white-space:nowrap;
+  transition:0.2s;
 }
 
+.create-btn:hover {
+  background:rgba(255,255,255,0.1);
+}
+
+.create-btn.active {
+  border:2px solid yellow;
+}
+
+/* UPLOAD */
 .upload-box {
   border:2px dashed white;
   padding:25px;
   margin-top:15px;
   border-radius:10px;
   cursor:pointer;
+  transition:0.2s;
+}
+
+.upload-box:hover {
+  background:rgba(255,255,255,0.1);
 }
 
 button {
@@ -80,13 +115,6 @@ button {
   border-radius:10px;
   background:white;
   cursor:pointer;
-}
-
-.item {
-  border:1px solid rgba(255,255,255,0.2);
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
 }
 
 .total {
@@ -136,28 +164,31 @@ function addItem(){
 
   let div = document.createElement("div");
   div.className = "item";
-  div.id = "item"+itemCount;
 
   div.innerHTML = `
     <h3>Item ${itemCount}</h3>
 
-    <select onchange="updateTotal()" id="type${itemCount}">
+    <select id="type${itemCount}" onchange="toggleDesign(${itemCount}); updateTotal();">
       <option value="25">Plain (₱25)</option>
       <option value="30">With Design (₱30)</option>
     </select>
 
-    <div class="designs" id="designs${itemCount}">
-      ${[1,2,3,4,5,6,7].map(i =>
-        `<img src="design${i}.png" onclick="selectDesign(${itemCount},${i})">`
-      ).join("")}
-    </div>
+    <div class="design-row" id="designRow${itemCount}" style="display:none;">
+      
+      <div class="designs" id="designs${itemCount}">
+        ${[1,2,3,4,5,6,7].map(i =>
+          `<img src="design${i}.png" onclick="selectDesign(${itemCount},${i})">`
+        ).join("")}
+      </div>
 
-    <div class="create-btn" onclick="selectDesign(${itemCount},'custom')">
-      Create Own Design
+      <div class="create-btn" id="custom${itemCount}" onclick="selectDesign(${itemCount},'custom')">
+        Create Own
+      </div>
+
     </div>
 
     <div class="upload-box" onclick="document.getElementById('file${itemCount}').click()">
-      Upload Photos
+      Upload Photos (4 only)
       <input type="file" id="file${itemCount}" multiple hidden>
     </div>
   `;
@@ -172,12 +203,24 @@ function addItem(){
   updateTotal();
 }
 
+function toggleDesign(i){
+  let val = document.getElementById("type"+i).value;
+  document.getElementById("designRow"+i).style.display =
+    val == "30" ? "flex" : "none";
+}
+
 function selectDesign(item, design){
+
   let imgs = document.querySelectorAll(`#designs${item} img`);
+  let customBtn = document.getElementById("custom"+item);
+
   imgs.forEach(i=>i.classList.remove("selected"));
+  customBtn.classList.remove("active");
 
   if(typeof design === "number"){
     imgs[design-1].classList.add("selected");
+  } else {
+    customBtn.classList.add("active");
   }
 
   let names = {
@@ -250,7 +293,6 @@ async function submitOrder(){
   });
 }
 
-// START WITH ONE ITEM
 addItem();
 </script>
 
