@@ -192,6 +192,7 @@ function addItem(){
     <h3>Item ${itemCount}</h3>
 
     <select onchange="toggleSections(this)">
+      <option value="plain">Plain (₱25)</option>
       <option value="design">With Design (₱30)</option>
       <option value="custom">Custom (₱40)</option>
     </select>
@@ -204,6 +205,11 @@ function addItem(){
           `).join("")}
         </div>
 
+        <div class="create-box" onclick="selectCreateOwn(this)">
+          Create Own
+        </div>
+      </div>
+    </div>
 
     <div class="customSection" style="display:none;">
       <textarea placeholder="Custom Request..."></textarea>
@@ -293,6 +299,7 @@ function updateTotal(){
   document.querySelectorAll(".card").forEach(card=>{
     let val = card.querySelector("select").value;
 
+    if(val==="plain") total+=25;
     if(val==="design") total+=30;
     if(val==="custom") total+=40;
   });
@@ -346,6 +353,12 @@ async function submitOrder(){
 
     if(type==="design"){
       let selected = card.querySelector(".selected");
+
+      if(selected?.classList.contains("create-box")){
+        design = "Create Own";
+      } else if(selected){
+        design = designNames[selected.dataset.name];
+      }
     }
 
     if(type==="custom"){
