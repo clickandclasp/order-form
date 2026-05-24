@@ -180,7 +180,7 @@ function addItem(){
     <div class="designSection" style="display:block">
       <div class="design-row">
         <div class="designs">
-          ${[1,2,3,4,5,6,7].map(n=>`
+          ${[1,2,3,4,5,6,7,8].map(n=>`
             <img src="design${n}.png" data-name="design${n}" onclick="selectDesign(this)">
           `).join("")}
         </div>
@@ -307,7 +307,8 @@ async function submitOrder(){
     "design4":"Blue Ocean",
     "design5":"Red Stripes",
     "design6":"Pink Pattern",
-    "design7":"Yellow Sun"
+    "design7":"Yellow Sun",
+    "design8":"Lavender Bloom"
   };
 
   let cards = document.querySelectorAll(".card");
