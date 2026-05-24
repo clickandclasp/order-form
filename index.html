@@ -121,6 +121,7 @@ textarea{
 }
 
 .card{
+  position:relative;
   width:100%;
   max-width:400px;
   margin:18px auto;
@@ -188,6 +189,30 @@ textarea{
 .designs img:hover{
   opacity:0.85;
   transform:translateY(-2px);
+}
+
+  .remove-btn{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:28px;
+  height:28px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,0.12);
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  transition:0.2s;
+}
+
+.remove-btn:hover{
+  background:rgba(255,255,255,0.22);
+  transform:scale(1.08);
 }
 
 .designs img.selected{
@@ -336,9 +361,11 @@ function addItem(){
 
   div.className = "card";
 
-  div.innerHTML = `
+div.innerHTML = `
 
-    <h3>Item ${itemCount}</h3>
+  <button class="remove-btn" onclick="removeItem(this)">×</button>
+
+  <h3>Item ${itemCount}</h3>
 
     <select onchange="toggleSections(this)">
       <option value="design">With Design (₱30)</option>
