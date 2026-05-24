@@ -363,7 +363,9 @@ function addItem(){
 
 div.innerHTML = `
 
-  <button class="remove-btn" onclick="removeItem(this)">×</button>
+  ${itemCount > 1 ? `
+    <button class="remove-btn" onclick="removeItem(this)">×</button>
+  ` : ""}
 
   <h3>Item ${itemCount}</h3>
 
