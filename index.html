@@ -41,20 +41,12 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 
-  /* Elegant luxury blue */
-  background:
-    linear-gradient(
-      180deg,
-      #173f73 0%,
-      #163761 35%,
-      #10294a 70%,
-      #0b1d36 100%
-    );
+  background:#254571;
 
   position:relative;
 }
 
-  body::before{
+body::before{
   content:"";
   position:fixed;
   inset:0;
@@ -62,13 +54,23 @@ body{
   background-image:url("logooo.png");
   background-repeat:no-repeat;
   background-position:center;
-  background-size:1400px;
+  background-size:1550px;
 
-  opacity:0.07;
+  opacity:0.10;
 
   pointer-events:none;
 
-  transform:scale(1.45);
+  transform:scale(1.55);
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(34%)
+    sepia(18%)
+    saturate(663%)
+    hue-rotate(175deg)
+    brightness(92%)
+    contrast(88%);
 }
 
 .container{
